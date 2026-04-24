@@ -1,84 +1,56 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useStore } from '@/lib/store'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Play, Sparkles, Zap, Shield, Clock, Users, Check, ChevronDown, ChevronUp, Star, Quote, Mail, ArrowLeft, Moon, Sun, Menu, X } from 'lucide-react'
+import { motion, AnimatePresence, useInView } from 'framer-motion'
+import { ArrowRight, Sparkles, Zap, Shield, Clock, Users, Check, Star, Quote, Menu, X, Play, TrendingUp, Target, Mail, MessageSquare, Phone, DollarSign, FileText, BarChart, Search, UsersRound, Rocket, ChevronRight } from 'lucide-react'
 import { useTheme } from '@/lib/theme-provider'
 
 const features = [
   { 
-    icon: '🎯', 
+    icon: Target, 
     title: 'Qualification BANT', 
-    desc: 'Scorez vos prospects en 30 secondes avec l\'IA',
-    color: 'from-indigo-500 to-purple-500',
-    popular: true
+    desc: 'Scorez vos prospects en 30 secondes',
+    color: 'from-indigo-500 to-purple-500'
   },
   { 
-    icon: '📧', 
+    icon: Mail, 
     title: 'Emails IA', 
-    desc: 'Génération d\'emails personnalisés percutants',
-    color: 'from-emerald-500 to-teal-500',
-    popular: true
+    desc: 'Générez des emails personnalisés',
+    color: 'from-emerald-500 to-teal-500'
   },
   { 
-    icon: '💼', 
+    icon: Search, 
     title: 'Recherche LinkedIn', 
-    desc: 'Trouvez les meilleurs prospects qualifiés',
-    color: 'from-blue-500 to-cyan-500',
-    popular: false
+    desc: 'Trouvez les prospects qualifiés',
+    color: 'from-blue-500 to-cyan-500'
   },
   { 
-    icon: '📞', 
+    icon: Phone, 
     title: 'Scripts Appel', 
     desc: 'Scripts de cold call qui convertissent',
-    color: 'from-purple-500 to-pink-500',
-    popular: false
+    color: 'from-purple-500 to-pink-500'
   },
   { 
-    icon: '💬', 
+    icon: MessageSquare, 
     title: 'Gestion Objections', 
-    desc: 'Techniques de closing professionnelles',
-    color: 'from-rose-500 to-red-500',
-    popular: false
+    desc: 'Techniques de closing pro',
+    color: 'from-rose-500 to-red-500'
   },
   { 
-    icon: '📬', 
+    icon: FileText, 
     title: 'Séquences Email', 
-    desc: '5 emails de follow-up optimisés',
-    color: 'from-green-500 to-emerald-500',
-    popular: false
+    desc: 'Follow-ups optimisés',
+    color: 'from-green-500 to-emerald-500'
   },
-  { 
-    icon: '💰', 
-    title: 'ROI Calculator', 
-    desc: 'Démontrez la valeur à vos prospects',
-    color: 'from-yellow-500 to-amber-500',
-    popular: false
-  },
-  { 
-    icon: '📋', 
-    title: 'Fiches CRM', 
-    desc: 'Export et synchronisation Notion',
-    color: 'from-violet-500 to-purple-500',
-    popular: false
-  },
-  { 
-    icon: '🔍', 
-    title: 'Analyse Concurrents', 
-    desc: 'Étudiez la concurrence en détail',
-    color: 'from-orange-500 to-red-500',
-    popular: false
-  },
-  { 
-    icon: '📄', 
-    title: 'Proposals', 
-    desc: 'Créez des proposals professionnelles',
-    color: 'from-cyan-500 to-blue-500',
-    popular: false
-  },
+]
+
+const stats = [
+  { value: 10000, suffix: '+', label: 'Leads qualifiés', prefix: '' },
+  { value: 50000, suffix: '+', label: 'Emails générés', prefix: '' },
+  { value: 98, suffix: '%', label: 'Satisfaction', prefix: '' },
+  { value: 500, suffix: '+', label: 'Utilisateurs', prefix: '' },
 ]
 
 const testimonials = [
@@ -87,105 +59,157 @@ const testimonials = [
     author: "Marie Dupont",
     role: "Sales Director",
     company: "TechScale",
-    result: "+47%",
-    avatar: "👩‍💼"
+    result: "+47%"
   },
   { 
-    quote: "2h/jour économisées sur la qualification. Je peux me concentrer sur les deals importants.",
+    quote: "2h/jour économisées sur la qualification. Je peux me concentrer sur les deals.",
     author: "Thomas Martin",
     role: "Commercial B2B",
     company: "GrowthAgency",
-    result: "2h/jour",
-    avatar: "👨‍💻"
+    result: "2h/jour"
   },
   { 
-    quote: "+30% de deals fermés avec les scripts IA. Mon manager ne comprend pas comment j'y arrive!",
+    quote: "+30% de deals fermés avec les scripts IA. Incroyable!",
     author: "Sophie Bernard",
     role: "Account Executive",
     company: "ScaleUp",
-    result: "+30%",
-    avatar: "👩‍🔬"
-  },
-  { 
-    quote: "Les emails générés par IA sont incroyables. Mon taux de réponse a doublé!",
-    author: "Lucas Petit",
-    role: "SDR Manager",
-    company: "SalesForce Pro",
-    result: "2x",
-    avatar: "👨‍🎨"
-  },
-  { 
-    quote: "J'utilise LeadFlow tous les jours. Indispensable pour ma prospection B2B.",
-    author: "Emma Moreau",
-    role: "Head of Sales",
-    company: "InnovTech",
-    result: "Quotidien",
-    avatar: "👩‍💻"
+    result: "+30%"
   },
 ]
 
-const faqs = [
-  {
-    q: "Comment fonctionne l'essai gratuit?",
-    a: "Vous avez accès à 5 démos gratuites sans carte bancaire. Testez tous les modules et décidez si LeadFlow vous convient."
-  },
-  {
-    q: "Puis-je annuler à tout moment?",
-    a: "Oui, vous pouvez annuler votre abonnement à tout moment depuis vos paramètres. Aucun engagement."
-  },
-  {
-    q: "L'IA est-elle vraiment efficace?",
-    a: "Nos modèles sont entraînés sur des millions de données B2B. 98% de nos utilisateurs recommandent LeadFlow."
-  },
-  {
-    q: "Combien de temps pour voir des résultats?",
-    a: "La plupart de nos utilisateurs voient une amélioration dès la première semaine d'utilisation."
-  },
-  {
-    q: "Puis-je inviter mon équipe?",
-    a: "Le plan Agency inclut jusqu'à 10 utilisateurs avec partage de contacts et historique."
-  },
-  {
-    q: "Mes données sont-elles sécurisées?",
-    a: "Oui, nous utilisons un chiffrement de niveau bancaire et respectons le RGPD."
-  },
+const plans = [
+  { id: 'free', name: 'Gratuit', price: 0, period: 'pour toujours', features: ['3 modules IA', '5 démos/mois', 'Historique limité'] },
+  { id: 'pro', name: 'Pro', price: 49, period: '/mois', popular: true, features: ['12 modules IA', '200 req/mois', 'Historique illimité', 'Emails IA', 'Scripts de vente'] },
+  { id: 'agency', name: 'Agency', price: 149, period: '/mois', features: ['1000 req/mois', ' Équipe (5)', 'API Keys', 'Support dédié'] },
 ]
+
+function StatCounter({ value, suffix, label, prefix }) {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true })
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (isInView) {
+      const duration = 2000
+      const steps = 60
+      const increment = value / steps
+      let current = 0
+      const timer = setInterval(() => {
+        current += increment
+        if (current >= value) {
+          setCount(value)
+          clearInterval(timer)
+        } else {
+          setCount(Math.floor(current))
+        }
+      }, duration / steps)
+      return () => clearInterval(timer)
+    }
+  }, [isInView, value])
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      className="text-center"
+    >
+      <div className={`text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent`}>
+        {prefix}{count.toLocaleString()}{suffix}
+      </div>
+      <div className="text-sm text-gray-500 mt-1">{label}</div>
+    </motion.div>
+  )
+}
+
+function FeatureCard({ feature, index }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1 }}
+      whileHover={{ y: -5 }}
+      className="group p-6 rounded-2xl bg-white/5 dark:bg-white/5 border border-white/10 dark:border-white/10 backdrop-blur-sm hover:border-violet-500/50 transition-all cursor-pointer"
+    >
+      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+        <feature.icon className="w-6 h-6 text-white" />
+      </div>
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
+      <p className="text-gray-600 dark:text-gray-400 text-sm">{feature.desc}</p>
+    </motion.div>
+  )
+}
+
+function TestimonialCard({ testimonial, index }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.15 }}
+      className="p-8 rounded-3xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 border border-violet-500/20"
+    >
+      <div className="flex items-center gap-1 mb-4">
+        {[...Array(5)].map((_, i) => (
+          <Star key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+        ))}
+      </div>
+      <p className="text-lg font-medium text-gray-900 dark:text-white mb-6">"{testimonial.quote}"</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="font-semibold text-gray-900 dark:text-white">{testimonial.author}</div>
+          <div className="text-sm text-gray-500">{testimonial.role} @ {testimonial.company}</div>
+        </div>
+        <div className="text-3xl font-bold text-violet-600">{testimonial.result}</div>
+      </div>
+    </motion.div>
+  )
+}
 
 export default function Landing() {
   const router = useRouter()
   const { theme, toggleTheme } = useTheme()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [openFaq, setOpenFaq] = useState(null)
-  const [showVideo, setShowVideo] = useState(false)
+  const [activeFeature, setActiveFeature] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveFeature((prev) => (prev + 1) % features.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0a0a0f]' : 'bg-gray-50'}`}>
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0f] overflow-x-hidden">
       {/* Animated Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-violet-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet-500/20 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/15 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
       {/* Nav */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b ${theme === 'dark' ? 'bg-[#0a0a0f]/80 border-gray-800/50' : 'bg-white/80 border-gray-200/50'}`}>
+      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-[#0a0a0f]/80 border-b border-gray-200/10 dark:border-gray-800/10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="flex items-center gap-3">
-            <motion.div 
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.5 }}
-              className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center"
-            >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
               <Zap className="w-6 h-6 text-white" />
-            </motion.div>
-            <span className="text-xl font-bold">LeadFlow IA</span>
+            </div>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">LeadFlow IA</span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-6">
-            <button onClick={toggleTheme} className={`p-2 rounded-lg transition ${theme === 'dark' ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}>
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          <div className="hidden md:flex items-center gap-8">
+            <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+              {theme === 'dark' ? '☀️' : '🌙'}
             </button>
-            <Link href="/auth/login" className={`font-medium ${theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>
+            <Link href="/demo" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
+              Démo
+            </Link>
+            <Link href="/auth/pricing" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
+              Tarifs
+            </Link>
+            <Link href="/auth/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
               Connexion
             </Link>
             <Link href="/auth/register" className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-violet-500/25 transition-all">
@@ -202,27 +226,18 @@ export default function Landing() {
       {/* Mobile Menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 md:hidden"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 md:hidden">
             <div className="absolute inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)}></div>
-            <motion.div
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              className={`absolute right-0 top-0 bottom-0 w-80 p-6 ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}
-            >
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="absolute right-0 top-0 bottom-0 w-80 p-6 bg-white dark:bg-gray-900">
               <div className="flex justify-between items-center mb-8">
                 <span className="font-bold text-lg">Menu</span>
                 <button onClick={() => setMobileMenuOpen(false)}><X className="w-6 h-6" /></button>
               </div>
               <div className="space-y-4">
-                <Link href="/auth/login" className="block py-3 text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>Connexion</Link>
-                <Link href="/auth/register" className="block py-3 text-lg font-medium text-violet-500" onClick={() => setMobileMenuOpen(false)}>Essai gratuit</Link>
-                <Link href="/auth/pricing" className="block py-3 text-lg font-medium" onClick={() => setMobileMenuOpen(false)}>Tarifs</Link>
+                <Link href="/demo" className="block py-3" onClick={() => setMobileMenuOpen(false)}>Démo</Link>
+                <Link href="/auth/pricing" className="block py-3" onClick={() => setMobileMenuOpen(false)}>Tarifs</Link>
+                <Link href="/auth/login" className="block py-3" onClick={() => setMobileMenuOpen(false)}>Connexion</Link>
+                <Link href="/auth/register" className="block py-3 text-violet-600 font-medium" onClick={() => setMobileMenuOpen(false)}>Essai gratuit</Link>
               </div>
             </motion.div>
           </motion.div>
@@ -230,15 +245,15 @@ export default function Landing() {
       </AnimatePresence>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-6 relative">
+      <section className="pt-40 pb-24 px-6 relative">
         <div className="max-w-5xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-violet-500/20 to-purple-500/20 border border-violet-500/30 text-violet-400 text-sm mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400 text-sm mb-8"
           >
             <Sparkles className="w-4 h-4" />
-            <span>Nouveau : 10 modules IA + Export Notion</span>
+            <span>Nouveau : 12 modules IA</span>
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
           </motion.div>
 
@@ -246,7 +261,7 @@ export default function Landing() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className={`text-5xl md:text-7xl font-bold mb-6 leading-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}
+            className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 leading-tight"
           >
             Ferme plus de deals<br />
             <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">
@@ -258,10 +273,9 @@ export default function Landing() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className={`text-xl mb-10 max-w-2xl mx-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}
+            className="text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto"
           >
-            Assistant commercial qui qualifie vos leads, génère vos emails et répond aux objections.
-            En 30 secondes par prospect.
+            Assistant commercial intelligent qui qualifie vos leads, génère vos emails et répond aux objections. En 30 secondes.
           </motion.p>
 
           <motion.div
@@ -274,9 +288,9 @@ export default function Landing() {
               Démarrer gratuitement
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <Link href="/auth/pricing" className={`px-8 py-4 rounded-xl font-semibold transition flex items-center justify-center gap-2 ${theme === 'dark' ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`}>
-              <Star className="w-5 h-5 text-yellow-500" />
-              Voir les tarifs
+            <Link href="/demo" className="px-8 py-4 rounded-xl font-semibold bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition flex items-center justify-center gap-2">
+              <Play className="w-5 h-5" />
+              Voir la démo
             </Link>
           </motion.div>
 
@@ -284,33 +298,37 @@ export default function Landing() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className={`mt-6 text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}
+            className="mt-6 text-sm text-gray-500"
           >
-            ✓ Aucune carte bancaire requise • ✓ 5 démos gratuites • ✓ Accès instantané
+            ✓ Aucune carte bancaire • ✓ 5 démos gratuites • ✓ Accès instantané
           </motion.p>
         </div>
+
+        {/* Floating Cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="max-w-4xl mx-auto mt-16 relative"
+        >
+          <div className="aspect-video rounded-3xl overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 shadow-2xl border border-gray-700">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-20 h-20 rounded-full bg-violet-500/20 flex items-center justify-center mx-auto mb-4">
+                  <Zap className="w-10 h-10 text-violet-400" />
+                </div>
+                <p className="text-gray-400">Interface de démonstration</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </section>
 
       {/* Stats */}
-      <section className={`py-16 px-6 border-y ${theme === 'dark' ? 'bg-gray-900/50 border-gray-800' : 'bg-white border-gray-200'}`}>
-        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          {[
-            { value: '10,000+', label: 'Leads qualifiés', icon: '🎯' },
-            { value: '50,000+', label: 'Emails générés', icon: '📧' },
-            { value: '98%', label: 'Satisfaction', icon: '⭐' },
-            { value: '500+', label: 'Utilisateurs actifs', icon: '👥' },
-          ].map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="p-4"
-            >
-              <div className="text-4xl mb-2">{stat.icon}</div>
-              <div className={`text-3xl font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{stat.value}</div>
-              <div className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>{stat.label}</div>
-            </motion.div>
+      <section className="py-20 px-6 border-y border-gray-200/10 dark:border-gray-800/10">
+        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
+          {stats.map((stat, i) => (
+            <StatCounter key={i} {...stat} />
           ))}
         </div>
       </section>
@@ -324,99 +342,35 @@ export default function Landing() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className={`text-4xl md:text-5xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              10 outils pour <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">fermer plus vite</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              Tout ce qu'il faut pour <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">fermer plus vite</span>
             </h2>
-            <p className={`text-lg max-w-2xl mx-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              Du premier contact au closing, automatisez votre prospection B2B avec l'IA
+            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              12 modules IA powered by Groq pour automatiser votre prospection B2B
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((f, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className={`group p-6 rounded-2xl border transition-all cursor-pointer hover:scale-105 ${
-                  theme === 'dark'
-                    ? 'bg-gray-800/50 border-gray-700 hover:border-violet-500 hover:bg-gray-800'
-                    : 'bg-white border-gray-200 hover:border-violet-500 hover:shadow-xl'
-                } ${f.popular ? (theme === 'dark' ? 'border-violet-500/50' : 'border-violet-500 shadow-lg shadow-violet-500/10') : ''}`}
-              >
-                {f.popular && (
-                  <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-violet-500/20 text-violet-400 text-xs font-medium mb-3">
-                    <Star className="w-3 h-3" />
-                    Populaire
-                  </div>
-                )}
-                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center text-2xl mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
-                  {f.icon}
-                </div>
-                <h3 className={`text-lg font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{f.title}</h3>
-                <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{f.desc}</p>
-              </motion.div>
+              <FeatureCard key={i} feature={{...f, icon: f.icon}} index={i} />
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* How it works */}
-      <section className={`py-24 px-6 ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-white'}`}>
-        <div className="max-w-6xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mt-12"
           >
-            <h2 className={`text-4xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              Comment ça marche ?
-            </h2>
-            <p className={`text-lg ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              Commencez en 3 étapes simples
-            </p>
+            <Link href="/demo" className="inline-flex items-center gap-2 text-violet-600 font-semibold hover:gap-3 transition-all">
+              Voir tous les modules <ChevronRight className="w-5 h-5" />
+            </Link>
           </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { step: '1', title: 'Créez votre compte', desc: 'Inscription gratuite en 30 secondes, sans carte bancaire', icon: '✍️' },
-              { step: '2', title: 'Choisissez un module', desc: 'Sélectionnez l\'outil IA adapté à votre besoin', icon: '🎯' },
-              { step: '3', title: 'Générez et convertissez', desc: 'Obtenez des résultats en 30 secondes et fermez plus de deals', icon: '🚀' },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.2 }}
-                className="relative"
-              >
-                <div className={`p-8 rounded-2xl ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-2xl mb-4">
-                    {item.icon}
-                  </div>
-                  <div className={`text-sm font-medium mb-2 ${theme === 'dark' ? 'text-violet-400' : 'text-violet-600'}`}>
-                    Étape {item.step}
-                  </div>
-                  <h3 className={`text-xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{item.title}</h3>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{item.desc}</p>
-                </div>
-                {i < 2 && (
-                  <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-                    <ArrowRight className={`w-8 h-8 ${theme === 'dark' ? 'text-gray-700' : 'text-gray-300'}`} />
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-6 bg-gradient-to-b from-transparent via-violet-500/5 to-transparent">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -424,44 +378,24 @@ export default function Landing() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className={`text-4xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
               Ils ont transformé leur <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">prospection</span>
             </h2>
-            <p className={`text-lg ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className="text-lg text-gray-600 dark:text-gray-400">
               Rejoignez les commerciaux qui utilisent LeadFlow chaque jour
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.slice(0, 3).map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`p-8 rounded-2xl ${theme === 'dark' ? 'bg-gray-800/50 border border-gray-700' : 'bg-white border border-gray-200'}`}
-              >
-                <Quote className="w-10 h-10 text-violet-500/50 mb-4" />
-                <div className="text-3xl font-bold text-violet-500 mb-4">{t.result}</div>
-                <p className={`mb-6 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>"{t.quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-lg">
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <div className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{t.author}</div>
-                    <div className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>{t.role} @ {t.company}</div>
-                  </div>
-                </div>
-              </motion.div>
+            {testimonials.map((t, i) => (
+              <TestimonialCard key={i} testimonial={t} index={i} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Pricing */}
-      <section className={`py-24 px-6 ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-white'}`} id="pricing">
+      {/* Pricing Preview */}
+      <section className="py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -469,181 +403,54 @@ export default function Landing() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className={`text-4xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              Tarifs <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">simples</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              Des tarifs <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">simples</span>
             </h2>
-            <p className={`text-lg ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            <p className="text-lg text-gray-600 dark:text-gray-400">
               Commencez gratuitement. Évoluez selon vos besoins.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Free */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className={`p-8 rounded-3xl ${theme === 'dark' ? 'bg-gray-800/50 border border-gray-700' : 'bg-white border border-gray-200'}`}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Clock className="w-6 h-6 text-gray-400" />
-                <h3 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Gratuit</h3>
-              </div>
-              <p className={`text-sm mb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Pour découvrir LeadFlow</p>
-              <div className="mb-8">
-                <span className={`text-5xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>0€</span>
-                <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}>/pour toujours</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-emerald-500" />
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>3 modules IA</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-emerald-500" />
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>5 démos/mois</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-emerald-500" />
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Historique limité</span>
-                </li>
-              </ul>
-              <Link href="/auth/register" className="block text-center py-4 rounded-xl font-semibold transition bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:shadow-lg">
-                Commencer gratuit
-              </Link>
-            </motion.div>
-
-            {/* Pro */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className={`p-8 rounded-3xl border-2 border-violet-500 relative ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
-            >
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-violet-600 to-purple-600 rounded-full text-xs font-bold text-white">
-                ⭐ LE PLUS POPULAIRE
-              </div>
-              <div className="flex items-center gap-2 mb-4">
-                <Sparkles className="w-6 h-6 text-violet-500" />
-                <h3 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Pro</h3>
-              </div>
-              <p className={`text-sm mb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Pour les commerciaux sérieux</p>
-              <div className="mb-8">
-                <span className={`text-5xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>49€</span>
-                <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}>/mois</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-emerald-500" />
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>10 modules IA</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-emerald-500" />
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>200 req/mois</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-emerald-500" />
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Historique illimité</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-emerald-500" />
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>CRM complet</span>
-                </li>
-              </ul>
-              <Link href="/auth/pricing" className="block text-center py-4 rounded-xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:shadow-lg">
-                Choisir Pro
-              </Link>
-            </motion.div>
-
-            {/* Agency */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className={`p-8 rounded-3xl ${theme === 'dark' ? 'bg-gray-800/50 border border-gray-700' : 'bg-white border border-gray-200'}`}
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-6 h-6 text-purple-500" />
-                <h3 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Agency</h3>
-              </div>
-              <p className={`text-sm mb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Pour les équipes sales</p>
-              <div className="mb-8">
-                <span className={`text-5xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>149€</span>
-                <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}>/mois</span>
-              </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-emerald-500" />
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Tout illimité</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-emerald-500" />
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>5 utilisateurs</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-emerald-500" />
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>API Keys</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="w-5 h-5 text-emerald-500" />
-                  <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Support prioritaire</span>
-                </li>
-              </ul>
-              <Link href="/auth/pricing" className="block text-center py-4 rounded-xl font-semibold transition bg-gradient-to-r from-purple-600 to-violet-600 text-white hover:shadow-lg">
-                Choisir Agency
-              </Link>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="py-24 px-6">
-        <div className="max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className={`text-4xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              Questions fréquentes
-            </h2>
-          </motion.div>
-
-          <div className="space-y-4">
-            {faqs.map((faq, i) => (
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {plans.map((plan, i) => (
               <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
+                key={plan.id}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className={`rounded-2xl overflow-hidden ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-white border border-gray-200'}`}
+                transition={{ delay: i * 0.1 }}
+                className={`relative p-8 rounded-3xl ${plan.popular ? 'bg-gradient-to-b from-violet-600 to-purple-600 text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}`}
               >
-                <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between p-6 text-left"
-                >
-                  <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{faq.q}</span>
-                  {openFaq === i ? <ChevronUp className="w-5 h-5 text-violet-500" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
-                </button>
-                <AnimatePresence>
-                  {openFaq === i && (
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: 'auto' }}
-                      exit={{ height: 0 }}
-                      className="overflow-hidden"
-                    >
-                      <div className={`px-6 pb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                        {faq.a}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-white text-violet-600 text-xs font-bold rounded-full">
+                    ⭐ POPULAIRE
+                  </div>
+                )}
+                <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{plan.name}</h3>
+                <p className={`text-sm mb-6 ${plan.popular ? 'text-violet-100' : 'text-gray-500'}`}>
+                  {plan.id === 'free' ? 'Pour découvrir' : 'Pour les pros'}
+                </p>
+                <div className="mb-6">
+                  <span className={`text-5xl font-bold ${plan.popular ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                    {plan.price}€
+                  </span>
+                  <span className={plan.popular ? 'text-violet-200' : 'text-gray-500'}>{plan.period}</span>
+                </div>
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((f, j) => (
+                    <li key={j} className="flex items-center gap-3">
+                      <Check className={`w-5 h-5 ${plan.popular ? 'text-white' : 'text-emerald-500'}`} />
+                      <span className={plan.popular ? 'text-violet-100' : 'text-gray-600 dark:text-gray-300'}>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/auth/register" className={`block text-center py-4 rounded-xl font-semibold transition ${
+                  plan.popular 
+                    ? 'bg-white text-violet-600 hover:bg-violet-50' 
+                    : 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:shadow-lg'
+                }`}>
+                  {plan.id === 'free' ? 'Commencer gratuit' : 'Choisir ' + plan.name}
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -652,97 +459,68 @@ export default function Landing() {
 
       {/* CTA */}
       <section className="py-24 px-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto text-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className={`text-center p-12 md:p-16 rounded-3xl ${theme === 'dark' ? 'bg-gradient-to-br from-violet-900/50 to-purple-900/50 border border-violet-500/30' : 'bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200'}`}
+            className="p-16 rounded-3xl bg-gradient-to-br from-violet-600 to-purple-600 relative overflow-hidden"
           >
-            <motion.div
-              initial={{ scale: 0 }}
-              whileInView={{ scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-              className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto mb-8"
-            >
-              <Zap className="w-10 h-10 text-white" />
-            </motion.div>
-            <h2 className={`text-4xl md:text-5xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              Prêt à fermer plus de deals ?
-            </h2>
-            <p className={`text-xl mb-10 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-              Rejoignez 500+ commerciaux qui utilisent LeadFlow IA chaque jour.
-            </p>
-            <Link href="/auth/register" className="inline-flex items-center gap-2 px-10 py-5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold text-xl text-white hover:shadow-xl hover:shadow-violet-500/25 transition-all">
-              Démarrer gratuitement
-              <ArrowRight className="w-6 h-6" />
-            </Link>
-            <p className={`mt-6 text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
-              Sans carte bancaire • Accès instantané • 5 démos gratuites
-            </p>
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtOS45NDEgMC0xOCA4LjA1OS0xOCAxOHM4LjA1OSAxOCAxOCAxOCAxOC04LjA1OSAxOC0xOC04LjA1OS0xOC0xOHoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjAyIi8+PC9nPjwvc3ZnPg==')] opacity-30"></div>
+            <div className="relative">
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                Prêt à transformer votre prospection ?
+              </h2>
+              <p className="text-xl text-violet-100 mb-8 max-w-xl mx-auto">
+                Rejoignez 500+ commerciaux qui génèrent plus de leads avec LeadFlow
+              </p>
+              <Link href="/auth/register" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-violet-600 rounded-xl font-bold text-lg hover:shadow-xl transition-all">
+                Commencer gratuitement
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Trust badges */}
-      <section className={`py-12 px-6 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-wrap items-center justify-center gap-8 text-gray-400">
-            <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              <span className="text-sm">Données sécurisées</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-5 h-5" />
-              <span className="text-sm">RGPD Compliant</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              <span className="text-sm">Support 24/7</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5" />
-              <span className="text-sm">Mis à jour hebdomadairement</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Footer */}
-      <footer className={`py-8 px-6 ${theme === 'dark' ? 'bg-gray-900/50' : 'bg-gray-100'}`}>
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
+      <footer className="py-12 px-6 border-t border-gray-200 dark:border-gray-800">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-4 gap-8 mb-12">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">LeadFlow IA</span>
+              </div>
+              <p className="text-gray-500 text-sm">Assistant commercial intelligent pour les pros du B2B.</p>
             </div>
-            <span className="font-semibold">LeadFlow IA</span>
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Produit</h4>
+              <ul className="space-y-2 text-sm text-gray-500">
+                <li><Link href="/demo" className="hover:text-violet-600">Démo</Link></li>
+                <li><Link href="/auth/pricing" className="hover:text-violet-600">Tarifs</Link></li>
+                <li><Link href="/dashboard" className="hover:text-violet-600">Dashboard</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Légal</h4>
+              <ul className="space-y-2 text-sm text-gray-500">
+                <li><Link href="/legal/privacy" className="hover:text-violet-600">Confidentialité</Link></li>
+                <li><Link href="/legal/terms" className="hover:text-violet-600">CGV</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Contact</h4>
+              <p className="text-sm text-gray-500">contact@leadflow-ia.fr</p>
+            </div>
           </div>
-          <div className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
-            © 2026 LeadFlow IA. Tous droits réservés.
-          </div>
-          <div className="flex gap-4">
-            <Link href="/auth/pricing" className={`text-sm ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>Tarifs</Link>
-            <Link href="/demo" className={`text-sm ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>Démo</Link>
-            <Link href="/legal/privacy" className={`text-sm ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>Confidentialité</Link>
-            <Link href="/legal/terms" className={`text-sm ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>CGU</Link>
-            <Link href="mailto:contact@leadflow.io" className={`text-sm ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}>Contact</Link>
+          <div className="text-center pt-8 border-t border-gray-200 dark:border-gray-800">
+            <p className="text-sm text-gray-500">© 2026 LeadFlow IA. Tous droits réservés.</p>
           </div>
         </div>
       </footer>
-
-      {/* Floating CTA */}
-      <motion.div
-        initial={{ opacity: 0, y: 100 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1 }}
-        className="fixed bottom-6 right-6 z-40"
-      >
-        <Link href="/auth/register" className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 rounded-full font-semibold text-white shadow-xl shadow-violet-500/25 hover:shadow-2xl transition-all">
-          <Sparkles className="w-5 h-5" />
-          <span className="hidden sm:inline">Essai gratuit</span>
-        </Link>
-      </motion.div>
     </div>
   )
 }
