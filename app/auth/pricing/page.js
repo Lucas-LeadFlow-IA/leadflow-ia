@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
-import { Zap, Check, X, ArrowLeft, Sparkles, Users, Building, CreditCard, ArrowRight, AlertCircle, Crown } from 'lucide-react'
+import { Zap, Check, X, ArrowLeft, Sparkles, Users, Building, CreditCard, ArrowRight, AlertCircle } from 'lucide-react'
 import { useTheme } from '@/lib/theme-provider'
 
 const PLANS = [
@@ -84,7 +84,7 @@ export default function PricingPage() {
   const [billing, setBilling] = useState('monthly')
   const [loading, setLoading] = useState(null)
 
-  const handleSelectPlan = async (planId) => {
+const handleSelectPlan = async (planId) => {
     if (!user) {
       router.push('/auth/register')
       return
@@ -97,6 +97,7 @@ export default function PricingPage() {
     }
 
     setLoading(planId)
+    
     try {
       const response = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
@@ -110,36 +111,38 @@ export default function PricingPage() {
       })
       
       const data = await response.json()
-      console.log('Payment response:', data)
+      
+      if (data.error) {
+        if (data.error.includes('permissions') || data.error.includes('clé')) {
+          toast.error(
+            <div className="flex flex-col gap-2">
+              <p className="font-bold">Configuration Stripe incorrecte</p>
+              <p className="text-sm">Vérifiez les permissions de la clé API</p>
+            </div>,
+            { icon: <AlertCircle className="w-5 h-5 text-red-500" />, duration: 8000 }
+          )
+        } else {
+          toast.error(
+            <div className="flex flex-col gap-2">
+              <p className="font-bold">Erreur de paiement</p>
+              <p className="text-sm">{data.error}</p>
+            </div>,
+            { icon: <AlertCircle className="w-5 h-5 text-red-500" />, duration: 6000 }
+          )
+        }
+        setLoading(null)
+        return
+      }
       
       if (data.url) {
         window.location.href = data.url
-      } else if (data.error) {
-        toast.error(
-          <div>
-            <p className="font-bold">Erreur de paiement</p>
-            <p className="text-sm">{data.error}</p>
-          </div>,
-          { icon: <AlertCircle className="w-5 h-5 text-red-500" /> }
-        )
-        setLoading(null)
-      } else {
-        toast.success(
-          <div>
-            <p className="font-bold">Bienvenue sur {planId.toUpperCase()} !</p>
-            <p className="text-sm">Votre plan est maintenant actif</p>
-          </div>,
-          { icon: <Crown className="w-5 h-5 text-yellow-500" /> }
-        )
-        setUser({ ...user, plan: planId })
-        router.push('/dashboard')
       }
     } catch (error) {
       console.error('Payment error:', error)
       toast.error(
-        <div>
+        <div className="flex flex-col gap-2">
           <p className="font-bold">Erreur</p>
-          <p className="text-sm">{error.message}</p>
+          <p className="text-sm">Une erreur est survenue. Réessayez plus tard.</p>
         </div>,
         { icon: <AlertCircle className="w-5 h-5 text-red-500" /> }
       )

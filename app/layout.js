@@ -26,7 +26,9 @@ export const metadata = {
     googleBot: { index: true, follow: true },
   },
   icons: {
-    icon: '/images/logo.svg',
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
   },
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
 }

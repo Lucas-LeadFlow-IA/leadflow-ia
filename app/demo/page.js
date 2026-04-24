@@ -28,11 +28,12 @@ export default function DemoPage() {
         body: JSON.stringify({
           moduleId: 'bant',
           data: {
-            name: 'Jean-Pierre Dubois',
-            position: 'PDG',
-            company: 'Innov Tech',
+            prenom: 'Jean-Pierre',
+            nom: 'Dubois',
+            fonction: 'PDG',
+            entreprise: 'Innov Tech',
             budget: '30000€',
-            challenge: 'Digitaliser son processus commercial'
+            notes: 'Digitaliser son processus commercial'
           }
         })
       })
