@@ -63,6 +63,13 @@ export default function RegisterPage() {
     
     if (result.success) {
       setSuccess(true)
+      try {
+        await fetch('/api/notifications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'new_user', email: formData.email, name: formData.name })
+        })
+      } catch (err) { console.error('Notif error:', err) }
       setTimeout(() => {
         router.push('/onboarding')
       }, 2000)

@@ -120,6 +120,19 @@ export async function POST(request) {
 
     return NextResponse.json({ url: session.url, sessionId: session.id })
 
+  // Send admin notification
+  try {
+    await fetch(process.env.NEXT_PUBLIC_APP_URL + '/api/notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'new_plan', email: email || 'unknown', plan }),
+    })
+  } catch (e) {
+    console.error('Notif failed:', e)
+  }
+
+  return NextResponse.json({ url: session.url, sessionId: session.id })
+
   } catch (error) {
     console.error('Stripe error:', error.type, error.message)
     
@@ -135,5 +148,17 @@ export async function POST(request) {
       error: errorMessage,
       details: error.message,
     }, { status: 500 })
+  }
+}
+
+export async function sendAdminNotification(type, email, plan) {
+  try {
+    await fetch(process.env.NEXT_PUBLIC_APP_URL + '/api/notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, email, plan }),
+    })
+  } catch (e) {
+    console.error('Notif failed:', e)
   }
 }
