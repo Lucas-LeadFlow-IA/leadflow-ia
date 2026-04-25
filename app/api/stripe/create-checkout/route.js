@@ -1,12 +1,32 @@
 import { NextResponse } from 'next/server'
 
-const stripe = process.env.STRIPE_SECRET_KEY ? require('stripe')(process.env.STRIPE_SECRET_KEY) : null
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+
+// Validation de la clé Stripe
+let stripe = null
+let stripeError = null
+
+if (!stripeSecretKey) {
+  stripeError = 'Stripe non configuré'
+} else if (stripeSecretKey.startsWith('rk_live_')) {
+  stripeError = 'Clé restreinte détectée. Utilisez une clé secrete (sk_live_...) depuis Stripe Dashboard'
+} else if (!stripeSecretKey.startsWith('sk_live_') && !stripeSecretKey.startsWith('sk_test_')) {
+  stripeError = 'Clé Stripe invalide. Doit commencer par sk_live_ ou sk_test_'
+} else {
+  try {
+    stripe = require('stripe')(stripeSecretKey)
+  } catch (e) {
+    stripeError = 'Erreur avec la clé Stripe'
+  }
+}
 
 export async function POST(request) {
-  // Check if Stripe is configured
-  if (!stripe) {
+  // Check if Stripe is configured correctly
+  if (stripeError || !stripe) {
+    console.error('Stripe config error:', stripeError)
     return NextResponse.json({ 
-      error: 'Stripe non configuré. Veuillez configurer STRIPE_SECRET_KEY dans les variables d\'environnement.' 
+      error: stripeError || 'Stripe non configuré',
+      hint: stripeSecretKey?.startsWith('rk_live_') ? 'Utilisez une clé secrete (sk_live_...), pas une clé restreinte (rk_live_...)' : 'Configurez STRIPE_SECRET_KEY dans les variables d\'environnement'
     }, { status: 500 })
   }
 
