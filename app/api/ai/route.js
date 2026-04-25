@@ -156,7 +156,28 @@ Notes: [Notes]`,
 
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 
+// Rate limiter simple en mémoire
+const requestCounts = new Map()
+
 export async function POST(request) {
+  // Rate limit : max 20 req/min par IP
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown'
+  const now = Date.now()
+  const windowMs = 60 * 1000
+  const maxRequests = 20
+
+  const userRequests = requestCounts.get(ip) || []
+  const recentRequests = userRequests.filter(t => now - t < windowMs)
+
+  if (recentRequests.length >= maxRequests) {
+    return NextResponse.json(
+      { error: 'Trop de requêtes. Attendez une minute.' },
+      { status: 429 }
+    )
+  }
+
+  requestCounts.set(ip, [...recentRequests, now])
+
   // 1.1 - Vérification clé API
   if (!GROQ_API_KEY) {
     console.error('GROQ_API_KEY manquante dans .env.local')

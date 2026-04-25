@@ -4,7 +4,7 @@ const stripe = process.env.STRIPE_SECRET_KEY ? require('stripe')(process.env.STR
 
 export async function POST(request) {
   if (!stripe) {
-    console.log('⚠️ Stripe non configuré en local')
+    console.warn('[STRIPE] Stripe non configuré en local')
     return NextResponse.json({ received: true })
   }
 
@@ -28,14 +28,14 @@ export async function POST(request) {
     const plan = session.metadata?.plan
     const email = session.customer_email
 
-    console.log(`✅ Paiement réussi: ${email} → plan ${plan}`)
+    console.log(`[STRIPE] Paiement réussi: ${email} → plan ${plan}`)
 
     // TODO: Intégrer Supabase pour mettre à jour le plan utilisateur
   }
 
   if (event.type === 'customer.subscription.deleted') {
     const subscription = event.data.object
-    console.log(`❌ Abonnement canceled: ${subscription.id}`)
+    console.log(`[STRIPE] Abonnement canceled: ${subscription.id}`)
   }
 
   return NextResponse.json({ received: true })

@@ -15,6 +15,6 @@ export async function POST(request) {
   
   // Simulation uniquement (Resend non installé)
   // Pour activer, installez: npm install resend et ajoutez RESEND_API_KEY dans .env.local
-  console.log('📧 Email de bienvenue simulé pour:', email, 'nom:', name)
+  console.log('[WELCOME] Email de bienvenue simulé pour:', email, 'nom:', name)
   return NextResponse.json({ success: true, simulated: true })
 }

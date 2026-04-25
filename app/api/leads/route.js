@@ -29,7 +29,7 @@ export async function POST(request) {
       leads.push(newLead)
     }
 
-    console.log('📧 Nouveau lead capturé:', newLead)
+    console.log('[LEADS] Nouveau lead capturé:', newLead)
     
     return NextResponse.json({ 
       success: true, 
