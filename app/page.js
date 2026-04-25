@@ -127,20 +127,25 @@ function CountdownTimer() {
   useEffect(() => {
     if (!isClient) return
     
-    let endDate
-    const storedEndDate = localStorage.getItem('offerEndDate')
+    const STORAGE_KEY = 'leadflow_offer_end'
+    const OFFER_DURATION_MS = 7 * 24 * 60 * 60 * 1000 // 7 jours
     
-    if (storedEndDate) {
-      endDate = new Date(storedEndDate)
+    // Charger ou créer la date de fin
+    let endDateStr = localStorage.getItem(STORAGE_KEY)
+    let endDate
+    
+    if (endDateStr) {
+      endDate = new Date(endDateStr)
     } else {
-      endDate = new Date()
-      endDate.setDate(endDate.getDate() + 7)
-      localStorage.setItem('offerEndDate', endDate.toISOString())
+      // Première visite: date fixe à 7 jours depuis maintenant
+      endDate = new Date(Date.now() + OFFER_DURATION_MS)
+      localStorage.setItem(STORAGE_KEY, endDate.toISOString())
     }
     
     const calculateTimeLeft = () => {
-      const now = new Date()
-      const diff = endDate.getTime() - now.getTime()
+      const now = new Date().getTime()
+      const endTime = endDate.getTime()
+      const diff = endTime - now
       
       if (diff <= 0) {
         return { days: 0, hours: 0, minutes: 0, seconds: 0 }
