@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
-import { ArrowRight, Sparkles, Zap, Shield, Clock, Users, Check, Star, Quote, Menu, X, Play, TrendingUp, Target, Mail, MessageSquare, Phone, DollarSign, FileText, BarChart, Search, UsersRound, Rocket, ChevronRight } from 'lucide-react'
+import { ArrowRight, Sparkles, Zap, Shield, Clock, Users, Check, Star, Quote, Menu, X, Play, Target, Mail, MessageSquare, Phone, CreditCard, ThumbsUp, AlertCircle, ChevronRight, Gift, Download, Search, FileText, Lock, UsersRound, Rocket, BarChart, DollarSign, ArrowDown, TrendingUp } from 'lucide-react'
 import { useTheme } from '@/lib/theme-provider'
 
 const features = [
@@ -59,21 +59,40 @@ const testimonials = [
     author: "Marie Dupont",
     role: "Sales Director",
     company: "TechScale",
-    result: "+47%"
+    result: "+47%",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marie"
   },
   { 
     quote: "2h/jour économisées sur la qualification. Je peux me concentrer sur les deals.",
     author: "Thomas Martin",
     role: "Commercial B2B",
     company: "GrowthAgency",
-    result: "2h/jour"
+    result: "2h/jour",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Thomas"
   },
   { 
     quote: "+30% de deals fermés avec les scripts IA. Incroyable!",
     author: "Sophie Bernard",
     role: "Account Executive",
     company: "ScaleUp",
-    result: "+30%"
+    result: "+30%",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie"
+  },
+  { 
+    quote: "Les emails IA ontboosté mon taux de réponse de 3x. Je recommande à tout commercial!",
+    author: "Lucas Bernard",
+    role: "SDR",
+    company: "CloudTech",
+    result: "3x",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lucas"
+  },
+  { 
+    quote: " finally une outil qui me fait gagner du temps concret. ROI en 2 semaines.",
+    author: "Julie Moreau",
+    role: "Head of Sales",
+    company: "DataPro",
+    result: "2sem",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Julie"
   },
 ]
 
@@ -82,6 +101,45 @@ const plans = [
   { id: 'pro', name: 'Pro', price: 49, period: '/mois', popular: true, features: ['12 modules IA', '200 req/mois', 'Historique illimité', 'Emails IA', 'Scripts de vente'] },
   { id: 'agency', name: 'Agency', price: 149, period: '/mois', features: ['1000 req/mois', ' Équipe (5)', 'API Keys', 'Support dédié'] },
 ]
+
+const trustBadges = [
+  { icon: Shield, label: 'Sécurisé SSL' },
+  { icon: Lock, label: 'Données chiffrées' },
+  { icon: CreditCard, label: 'Paiement sécurisé' },
+  { icon: ThumbsUp, label: '98% satisfait' },
+]
+
+const leadsMagnets = [
+  { title: 'Guide : 10 scripts qui tuent les objections', downloads: 1247 },
+  { title: 'Checklist : Qualifier un lead en 30s', downloads: 892 },
+  { title: 'Template : Email de prospection parfait', downloads: 2103 },
+]
+
+function CountdownTimer() {
+  const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 59 })
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 }
+        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 }
+        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 }
+        return prev
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <div className="flex items-center gap-2 text-red-500 font-mono text-lg font-bold">
+      <span className="bg-red-500/20 px-3 py-1 rounded-lg">{String(timeLeft.hours).padStart(2, '0')}</span>
+      <span>:</span>
+      <span className="bg-red-500/20 px-3 py-1 rounded-lg">{String(timeLeft.minutes).padStart(2, '0')}</span>
+      <span>:</span>
+      <span className="bg-red-500/20 px-3 py-1 rounded-lg">{String(timeLeft.seconds).padStart(2, '0')}</span>
+    </div>
+  )
+}
 
 function StatCounter({ value, suffix, label, prefix }) {
   const ref = useRef(null)
@@ -114,7 +172,7 @@ function StatCounter({ value, suffix, label, prefix }) {
       whileInView={{ opacity: 1, y: 0 }}
       className="text-center"
     >
-      <div className={`text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent`}>
+      <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">
         {prefix}{count.toLocaleString()}{suffix}
       </div>
       <div className="text-sm text-gray-500 mt-1">{label}</div>
@@ -141,29 +199,42 @@ function FeatureCard({ feature, index }) {
   )
 }
 
-function TestimonialCard({ testimonial, index }) {
+function LeadMagnet() {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.15 }}
-      className="p-8 rounded-3xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 border border-violet-500/20"
-    >
-      <div className="flex items-center gap-1 mb-4">
-        {[...Array(5)].map((_, i) => (
-          <Star key={i} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-        ))}
+    <section className="py-16 px-6 bg-gradient-to-r from-violet-600 to-purple-600">
+      <div className="max-w-4xl mx-auto text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <Gift className="w-12 h-12 text-white mx-auto mb-4" />
+          <h2 className="text-3xl font-bold text-white mb-2">
+            Téléchargez nos guides gratuits
+          </h2>
+          <p className="text-violet-100 mb-6">
+            Resources exclusives pour booster votre prospection
+          </p>
+          <div className="grid md:grid-cols-3 gap-4">
+            {leadsMagnets.map((item, i) => (
+              <motion.div
+                key={i}
+                whileHover={{ scale: 1.02 }}
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-4 cursor-pointer hover:bg-white/20 transition"
+              >
+                <div className="flex items-center gap-3">
+                  <Download className="w-8 h-8 text-white" />
+                  <div className="text-left">
+                    <p className="text-white font-medium text-sm">{item.title}</p>
+                    <p className="text-violet-200 text-xs">{item.downloads.toLocaleString()} téléchargements</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
       </div>
-      <p className="text-lg font-medium text-gray-900 dark:text-white mb-6">"{testimonial.quote}"</p>
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="font-semibold text-gray-900 dark:text-white">{testimonial.author}</div>
-          <div className="text-sm text-gray-500">{testimonial.role} @ {testimonial.company}</div>
-        </div>
-        <div className="text-3xl font-bold text-violet-600">{testimonial.result}</div>
-      </div>
-    </motion.div>
+    </section>
   )
 }
 
@@ -182,11 +253,11 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0f] overflow-x-hidden">
+
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet-500/20 rounded-full blur-[120px] animate-pulse"></div>
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/15 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-indigo-500/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
       {/* Nav */}
@@ -244,17 +315,18 @@ export default function Landing() {
         )}
       </AnimatePresence>
 
-      {/* Hero */}
+      {/* Hero with Urgency */}
       <section className="pt-40 pb-24 px-6 relative">
         <div className="max-w-5xl mx-auto text-center">
+          {/* Urgency Banner */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400 text-sm mb-8"
+            className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 mb-6"
           >
-            <Sparkles className="w-4 h-4" />
-            <span>Nouveau : 12 modules IA</span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <AlertCircle className="w-5 h-5" />
+            <span className="font-medium">Offre lancement : -20% sur le plan Pro</span>
+            <CountdownTimer />
           </motion.div>
 
           <motion.h1
@@ -294,34 +366,30 @@ export default function Landing() {
             </Link>
           </motion.div>
 
-          <motion.p
+          {/* Trust Badges */}
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-6 text-sm text-gray-500"
+            className="flex flex-wrap justify-center gap-6 mt-8"
           >
-            ✓ Aucune carte bancaire • ✓ 5 démos gratuites • ✓ Accès instantané
+            {trustBadges.map((badge, i) => (
+              <div key={i} className="flex items-center gap-2 text-sm text-gray-500">
+                <badge.icon className="w-5 h-5 text-emerald-500" />
+                {badge.label}
+              </div>
+            ))}
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="mt-4 text-sm text-gray-500"
+          >
+            ✓ Aucune carte bancaire • ✓ 5 démos gratuites • ✓ Accès instantané • <span className="text-emerald-500 font-medium">Garantie satisfait ou remboursé 30 jours</span>
           </motion.p>
         </div>
-
-        {/* Floating Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="max-w-4xl mx-auto mt-16 relative"
-        >
-          <div className="aspect-video rounded-3xl overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 shadow-2xl border border-gray-700">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-20 h-20 rounded-full bg-violet-500/20 flex items-center justify-center mx-auto mb-4">
-                  <Zap className="w-10 h-10 text-violet-400" />
-                </div>
-                <p className="text-gray-400">Interface de démonstration</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
       </section>
 
       {/* Stats */}
@@ -332,6 +400,9 @@ export default function Landing() {
           ))}
         </div>
       </section>
+
+      {/* Lead Magnet Section */}
+      <LeadMagnet />
 
       {/* Features */}
       <section className="py-24 px-6">
@@ -369,8 +440,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-24 px-6 bg-gradient-to-b from-transparent via-violet-500/5 to-transparent">
+      {/* Extended Social Proof */}
+      <section className="py-24 px-6 bg-gradient-to-b from-transparent via-violet-5 to-transparent dark:via-violet-500/5">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -387,15 +458,54 @@ export default function Landing() {
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
-              <TestimonialCard key={i} testimonial={t} index={i} />
+            {testimonials.slice(0, 3).map((t, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className="p-8 rounded-3xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+              >
+                <div className="flex items-center gap-1 mb-4">
+                  {[...Array(5)].map((_, j) => (
+                    <Star key={j} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  ))}
+                </div>
+                <p className="text-lg font-medium text-gray-900 dark:text-white mb-6">"{t.quote}"</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-semibold text-gray-900 dark:text-white">{t.author}</div>
+                    <div className="text-sm text-gray-500">{t.role} @ {t.company}</div>
+                  </div>
+                  <div className="text-3xl font-bold text-violet-600">{t.result}</div>
+                </div>
+              </motion.div>
             ))}
           </div>
+
+          {/* More testimonials */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mt-8 grid md:grid-cols-2 gap-4"
+          >
+            {testimonials.slice(3).map((t, i) => (
+              <div key={i} className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 flex items-center gap-4">
+                <div className="text-2xl font-bold text-violet-600">{t.result}</div>
+                <div>
+                  <p className="text-gray-900 dark:text-white text-sm">"{t.quote}"</p>
+                  <p className="text-gray-500 text-xs">{t.author} - {t.role}</p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
-      {/* Pricing Preview */}
-      <section className="py-24 px-6">
+      {/* Pricing */}
+      <section className="py-24 px-6" id="pricing">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -423,7 +533,7 @@ export default function Landing() {
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-white text-violet-600 text-xs font-bold rounded-full">
-                    ⭐ POPULAIRE
+                    ⭐ -20% CE MOIS
                   </div>
                 )}
                 <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{plan.name}</h3>
@@ -454,10 +564,23 @@ export default function Landing() {
               </motion.div>
             ))}
           </div>
+
+          {/* Money Back Guarantee */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="text-center mt-8"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-600 text-sm">
+              <Shield className="w-4 h-4" />
+              Garantie satisfait ou remboursé 30 jours - Pas de risque
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* CTA */}
+      {/* Final CTA */}
       <section className="py-24 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <motion.div
