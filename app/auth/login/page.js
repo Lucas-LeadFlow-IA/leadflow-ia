@@ -23,6 +23,12 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
+    if (!email || !password) {
+      setError('Veuillez remplir tous les champs')
+      setLoading(false)
+      return
+    }
+
     const result = await login(email, password)
     
     if (result.success) {
@@ -41,9 +47,12 @@ export default function LoginPage() {
     if (type === 'demo') {
       setEmail('demo@leadflow.io')
       setPassword('demo123')
-    } else {
+    } else if (type === 'pro') {
       setEmail('pro@leadflow.io')
       setPassword('pro123')
+    } else {
+      setEmail('agency@leadflow.io')
+      setPassword('agency123')
     }
   }
 

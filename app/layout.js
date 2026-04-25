@@ -1,5 +1,6 @@
 import './globals.css'
 import { ThemeProvider } from '@/lib/theme-provider'
+import { StoreProvider } from '@/lib/store-provider'
 import { Toaster } from 'react-hot-toast'
 
 export const viewport = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
@@ -39,31 +40,33 @@ export default function RootLayout({ children }) {
     <html lang="fr" suppressHydrationWarning>
       <body>
         <ThemeProvider>
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#12121a',
-                color: '#e2e8f0',
-                border: '1px solid #6366f1',
-                borderRadius: '12px',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#10b981',
-                  secondary: '#12121a',
+          <StoreProvider>
+            <Toaster 
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#12121a',
+                  color: '#e2e8f0',
+                  border: '1px solid #6366f1',
+                  borderRadius: '12px',
                 },
-              },
-              error: {
-                iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#12121a',
+                success: {
+                  iconTheme: {
+                    primary: '#10b981',
+                    secondary: '#12121a',
+                  },
                 },
-              },
-            }}
-          />
-          {children}
+                error: {
+                  iconTheme: {
+                    primary: '#ef4444',
+                    secondary: '#12121a',
+                  },
+                },
+              }}
+            />
+            {children}
+          </StoreProvider>
         </ThemeProvider>
       </body>
     </html>
