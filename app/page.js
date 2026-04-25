@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
-import { ArrowRight, Sparkles, Zap, Shield, Clock, Users, Check, Star, Quote, Menu, X, Play, Target, Mail, MessageSquare, Phone, CreditCard, ThumbsUp, AlertCircle, ChevronRight, Gift, Download, Search, FileText, Lock, UsersRound, Rocket, BarChart, DollarSign, ArrowDown, TrendingUp } from 'lucide-react'
+import { ArrowRight, Sparkles, Zap, Shield, Clock, Users, Check, Star, Quote, Menu, X, Play, Target, Mail, MessageSquare, Phone, CreditCard, ThumbsUp, AlertCircle, ChevronRight, Gift, Download, Search, FileText, Lock, UsersRound, Rocket, BarChart, DollarSign, ArrowDown, TrendingUp, Headphones } from 'lucide-react'
 import { useTheme } from '@/lib/theme-provider'
 import { useStore } from '@/lib/store'
 
@@ -306,19 +306,48 @@ export default function Landing() {
             <span className="text-xl font-bold text-gray-900 dark:text-white">LeadFlow IA</span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-4">
             <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
-            <Link href="/auth/pricing" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
-              Tarifs
-            </Link>
-            <Link href="/auth/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
-              Connexion
-            </Link>
-            <Link href="/auth/register" className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-violet-500/25 transition-all">
-              Essayer gratuit
-            </Link>
+            {user && user.email ? (
+              <>
+                <Link href="/dashboard" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
+                  Dashboard
+                </Link>
+                <Link href="/dashboard/leads" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
+                  Mes Leads
+                </Link>
+                <Link href="/dashboard/contacts" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
+                  Contacts
+                </Link>
+                <Link href="/dashboard/settings" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
+                  Paramètres
+                </Link>
+                <a href="mailto:lucas.legrand567@gmail.com" className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
+                  <Headphones className="w-4 h-4" />
+                  Support
+                </a>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-100 dark:bg-violet-900/30">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
+                    {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">{user.name || user.email.split('@')[0]}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/pricing" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
+                  Tarifs
+                </Link>
+                <Link href="/auth/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
+                  Connexion
+                </Link>
+                <Link href="/auth/register" className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-violet-500/25 transition-all">
+                  Essayer gratuit
+                </Link>
+              </>
+            )}
           </div>
 
           <button onClick={() => setMobileMenuOpen(true)} className="md:hidden p-2">
@@ -338,11 +367,26 @@ export default function Landing() {
                 <button onClick={() => setMobileMenuOpen(false)}><X className="w-6 h-6" /></button>
               </div>
               <div className="space-y-4">
-                <Link href="/auth/pricing" className="block py-3" onClick={() => setMobileMenuOpen(false)}>Tarifs</Link>
-                <Link href="/auth/login" className="block py-3" onClick={() => setMobileMenuOpen(false)}>Connexion</Link>
-                <button onClick={handleStartClick} className="block py-3 text-violet-600 font-medium text-left">
-                  {user && user.email ? 'Se connecter' : 'Essai gratuit'}
-                </button>
+                {user && user.email ? (
+                  <>
+                    <Link href="/dashboard" className="block py-3 font-medium" onClick={() => setMobileMenuOpen(false)}>📊 Dashboard</Link>
+                    <Link href="/dashboard/leads" className="block py-3" onClick={() => setMobileMenuOpen(false)}>🎯 Mes Leads</Link>
+                    <Link href="/dashboard/contacts" className="block py-3" onClick={() => setMobileMenuOpen(false)}>👥 Contacts</Link>
+                    <Link href="/dashboard/settings" className="block py-3" onClick={() => setMobileMenuOpen(false)}>⚙️ Paramètres</Link>
+                    <a href="mailto:lucas.legrand567@gmail.com" className="block py-3 flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>🎧 Support</a>
+                    <div className="py-3 text-violet-600 font-medium">
+                      {user.name || user.email}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/auth/pricing" className="block py-3" onClick={() => setMobileMenuOpen(false)}>Tarifs</Link>
+                    <Link href="/auth/login" className="block py-3" onClick={() => setMobileMenuOpen(false)}>Connexion</Link>
+                    <button onClick={handleStartClick} className="block py-3 text-violet-600 font-medium text-left">
+                      {user && user.email ? 'Se connecter' : 'Essai gratuit'}
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
           </motion.div>
