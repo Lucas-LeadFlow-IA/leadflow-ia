@@ -118,10 +118,17 @@ const leadsMagnets = [
 
 function CountdownTimer() {
   const [timeLeft, setTimeLeft] = useState({ days: 7, hours: 0, minutes: 0, seconds: 0 })
+  const [isClient, setIsClient] = useState(false)
   
   useEffect(() => {
-    const storedEndDate = localStorage.getItem('offerEndDate')
+    setIsClient(true)
+  }, [])
+  
+  useEffect(() => {
+    if (!isClient) return
+    
     let endDate
+    const storedEndDate = localStorage.getItem('offerEndDate')
     
     if (storedEndDate) {
       endDate = new Date(storedEndDate)
@@ -154,8 +161,22 @@ function CountdownTimer() {
     }, 1000)
     
     return () => clearInterval(timer)
-  }, [])
+  }, [isClient])
 
+  // Render simple pendant SSR
+  if (!isClient) {
+    return (
+      <div className="flex items-center gap-2 text-red-500 font-mono text-lg font-bold">
+        <span className="bg-red-500/20 px-3 py-1 rounded-lg">07</span>
+        <span>j</span>
+        <span className="bg-red-500/20 px-3 py-1 rounded-lg">00</span>
+        <span>h</span>
+        <span className="bg-red-500/20 px-3 py-1 rounded-lg">00</span>
+        <span>m</span>
+      </div>
+    )
+  }
+  
   return (
     <div className="flex items-center gap-2 text-red-500 font-mono text-lg font-bold">
       <span className="bg-red-500/20 px-3 py-1 rounded-lg">{String(timeLeft.days).padStart(2, '0')}</span>
