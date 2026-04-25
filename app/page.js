@@ -98,9 +98,9 @@ const testimonials = [
 ]
 
 const plans = [
-  { id: 'free', name: 'Gratuit', price: 0, period: 'pour toujours', features: ['3 modules IA', '5 démos/mois', 'Historique limité'] },
-  { id: 'pro', name: 'Pro', price: 49, period: '/mois', popular: true, features: ['12 modules IA', '200 req/mois', 'Historique illimité', 'Emails IA', 'Scripts de vente'] },
-  { id: 'agency', name: 'Agency', price: 149, period: '/mois', features: ['1000 req/mois', ' Équipe (5)', 'API Keys', 'Support dédié'] },
+  { id: 'free', name: 'Gratuit', price: 0, priceYearly: 0, period: 'pour toujours', features: ['3 modules IA', '5 démos/mois', 'Historique limité'] },
+  { id: 'pro', name: 'Pro', price: 49, priceYearly: 39, period: '/mois', popular: true, features: ['12 modules IA', '200 req/mois', 'Historique illimité', 'Emails IA', 'Scripts de vente'] },
+  { id: 'agency', name: 'Agency', price: 149, priceYearly: 119, period: '/mois', features: ['1000 req/mois', ' Équipe (5)', 'API Keys', 'Support dédié'] },
 ]
 
 const trustBadges = [
@@ -297,6 +297,7 @@ export default function Landing() {
   const { user } = useStore()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeFeature, setActiveFeature] = useState(0)
+  const [billing, setBilling] = useState('monthly')
 
   const handleStartClick = () => {
     if (user && user.email) {
@@ -611,7 +612,7 @@ export default function Landing() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-8"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
               Des tarifs <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">simples</span>
@@ -620,6 +621,35 @@ export default function Landing() {
               Commencez gratuitement. Évoluez selon vos besoins.
             </p>
           </motion.div>
+
+          {/* Billing Toggle */}
+          <div className="flex justify-center mb-8">
+            <div className={`inline-flex items-center gap-4 p-2 rounded-xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
+              <button
+                onClick={() => setBilling('monthly')}
+                className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                  billing === 'monthly'
+                    ? 'bg-violet-600 text-white'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                Mensuel
+              </button>
+              <button
+                onClick={() => setBilling('yearly')}
+                className={`px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                  billing === 'yearly'
+                    ? 'bg-violet-600 text-white'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                Annuel
+                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
+                  -20%
+                </span>
+              </button>
+            </div>
+          </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {plans.map((plan, i) => (
@@ -631,9 +661,9 @@ export default function Landing() {
                 transition={{ delay: i * 0.1 }}
                 className={`relative p-8 rounded-3xl ${plan.popular ? 'bg-gradient-to-b from-violet-600 to-purple-600 text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}`}
               >
-                {plan.popular && (
+                {(plan.popular || billing === 'yearly') && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-white text-violet-600 text-xs font-bold rounded-full">
-                    ⭐ -20% CE MOIS
+                    {plan.popular ? '⭐ -20% CE MOIS' : '🔥 -20%'}
                   </div>
                 )}
                 <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{plan.name}</h3>
@@ -642,9 +672,16 @@ export default function Landing() {
                 </p>
                 <div className="mb-6">
                   <span className={`text-5xl font-bold ${plan.popular ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
-                    {plan.price}€
+                    {billing === 'yearly' && plan.priceYearly ? plan.priceYearly : plan.price}€
                   </span>
-                  <span className={plan.popular ? 'text-violet-200' : 'text-gray-500'}>{plan.period}</span>
+                  <span className={plan.popular ? 'text-violet-200' : 'text-gray-500'}>
+                    {plan.period}
+                  </span>
+                  {billing === 'yearly' && plan.priceYearly && (
+                    <div className={`text-sm mt-1 ${plan.popular ? 'text-violet-200' : 'text-emerald-500'}`}>
+                      Économisez {Math.round((plan.price - plan.priceYearly) * 12)}€/an
+                    </div>
+                  )}
                 </div>
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((f, j) => (
