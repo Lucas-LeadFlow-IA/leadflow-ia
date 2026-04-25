@@ -43,19 +43,6 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  const fillDemo = (type) => {
-    if (type === 'demo') {
-      setEmail('demo@leadflow.io')
-      setPassword('demo123')
-    } else if (type === 'pro') {
-      setEmail('pro@leadflow.io')
-      setPassword('pro123')
-    } else {
-      setEmail('agency@leadflow.io')
-      setPassword('agency123')
-    }
-  }
-
   if (success) {
     return (
       <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-[#0a0a0f]' : 'bg-gray-50'}`}>
@@ -169,31 +156,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className={`mb-6 p-4 rounded-xl bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20`}>
-            <p className={`text-sm mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
-              🧪 Comptes de démonstration :
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              <button
-                onClick={() => fillDemo('demo')}
-                className="text-xs px-3 py-1.5 rounded-lg bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 transition-colors"
-              >
-                Demo (Gratuit)
-              </button>
-              <button
-                onClick={() => fillDemo('pro')}
-                className="text-xs px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-colors"
-              >
-                Pro
-              </button>
-              <button
-                onClick={() => fillDemo('agency')}
-                className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors"
-              >
-                Agency
-              </button>
-            </div>
-          </div>
+          
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>

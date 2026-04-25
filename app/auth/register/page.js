@@ -80,15 +80,7 @@ export default function RegisterPage() {
     setLoading(false)
   }
 
-  const fillDemo = () => {
-    setFormData({
-      name: 'Marie Demo',
-      email: 'demo@leadflow.io',
-      company: 'TechCorp',
-      password: 'demo123',
-      confirmPassword: 'demo123'
-    })
-  }
+
 
   if (success) {
     return (
@@ -380,17 +372,7 @@ export default function RegisterPage() {
             </button>
           </p>
 
-          <div className={`mt-6 p-4 rounded-xl ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'}`}>
-            <p className={`text-sm text-center mb-3 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              🔑 Vous pouvez aussi tester avec le compte démo :
-            </p>
-            <button
-              onClick={fillDemo}
-              className="w-full py-2 rounded-lg bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors text-sm font-medium"
-            >
-              Remplir avec démo@leadflow.io
-            </button>
-          </div>
+          
         </motion.div>
       </div>
     </div>
