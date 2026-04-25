@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { ArrowRight, Sparkles, Zap, Shield, Clock, Users, Check, Star, Quote, Menu, X, Play, Target, Mail, MessageSquare, Phone, CreditCard, ThumbsUp, AlertCircle, ChevronRight, Gift, Download, Search, FileText, Lock, UsersRound, Rocket, BarChart, DollarSign, ArrowDown, TrendingUp } from 'lucide-react'
 import { useTheme } from '@/lib/theme-provider'
+import { useStore } from '@/lib/store'
 
 const features = [
   { 
@@ -116,27 +117,53 @@ const leadsMagnets = [
 ]
 
 function CountdownTimer() {
-  const [timeLeft, setTimeLeft] = useState({ hours: 23, minutes: 59, seconds: 59 })
+  const [timeLeft, setTimeLeft] = useState({ days: 7, hours: 0, minutes: 0, seconds: 0 })
   
   useEffect(() => {
+    const storedEndDate = localStorage.getItem('offerEndDate')
+    let endDate
+    
+    if (storedEndDate) {
+      endDate = new Date(storedEndDate)
+    } else {
+      endDate = new Date()
+      endDate.setDate(endDate.getDate() + 7)
+      localStorage.setItem('offerEndDate', endDate.toISOString())
+    }
+    
+    const calculateTimeLeft = () => {
+      const now = new Date()
+      const diff = endDate.getTime() - now.getTime()
+      
+      if (diff <= 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0 }
+      }
+      
+      return {
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60)
+      }
+    }
+    
+    setTimeLeft(calculateTimeLeft())
+    
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 }
-        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 }
-        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 }
-        return prev
-      })
+      setTimeLeft(calculateTimeLeft())
     }, 1000)
+    
     return () => clearInterval(timer)
   }, [])
 
   return (
     <div className="flex items-center gap-2 text-red-500 font-mono text-lg font-bold">
+      <span className="bg-red-500/20 px-3 py-1 rounded-lg">{String(timeLeft.days).padStart(2, '0')}</span>
+      <span>j</span>
       <span className="bg-red-500/20 px-3 py-1 rounded-lg">{String(timeLeft.hours).padStart(2, '0')}</span>
-      <span>:</span>
+      <span>h</span>
       <span className="bg-red-500/20 px-3 py-1 rounded-lg">{String(timeLeft.minutes).padStart(2, '0')}</span>
-      <span>:</span>
-      <span className="bg-red-500/20 px-3 py-1 rounded-lg">{String(timeLeft.seconds).padStart(2, '0')}</span>
+      <span>m</span>
     </div>
   )
 }
@@ -241,8 +268,17 @@ function LeadMagnet() {
 export default function Landing() {
   const router = useRouter()
   const { theme, toggleTheme } = useTheme()
+  const { user } = useStore()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeFeature, setActiveFeature] = useState(0)
+
+  const handleStartClick = () => {
+    if (user && user.email) {
+      router.push('/auth/login')
+    } else {
+      router.push('/auth/register')
+    }
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -274,9 +310,6 @@ export default function Landing() {
             <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
-            <Link href="/demo" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
-              Démo
-            </Link>
             <Link href="/auth/pricing" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
               Tarifs
             </Link>
@@ -305,10 +338,11 @@ export default function Landing() {
                 <button onClick={() => setMobileMenuOpen(false)}><X className="w-6 h-6" /></button>
               </div>
               <div className="space-y-4">
-                <Link href="/demo" className="block py-3" onClick={() => setMobileMenuOpen(false)}>Démo</Link>
                 <Link href="/auth/pricing" className="block py-3" onClick={() => setMobileMenuOpen(false)}>Tarifs</Link>
                 <Link href="/auth/login" className="block py-3" onClick={() => setMobileMenuOpen(false)}>Connexion</Link>
-                <Link href="/auth/register" className="block py-3 text-violet-600 font-medium" onClick={() => setMobileMenuOpen(false)}>Essai gratuit</Link>
+                <button onClick={handleStartClick} className="block py-3 text-violet-600 font-medium text-left">
+                  {user && user.email ? 'Se connecter' : 'Essai gratuit'}
+                </button>
               </div>
             </motion.div>
           </motion.div>
@@ -356,14 +390,10 @@ export default function Landing() {
             transition={{ delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-4 justify-center"
           >
-            <Link href="/auth/register" className="group px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold text-lg text-white hover:shadow-xl hover:shadow-violet-500/25 transition-all flex items-center justify-center gap-2">
-              Démarrer gratuitement
+            <button onClick={handleStartClick} className="group px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold text-lg text-white hover:shadow-xl hover:shadow-violet-500/25 transition-all flex items-center justify-center gap-2">
+              {user && user.email ? 'Se connecter' : 'Démarrer gratuitement'}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link href="/demo" className="px-8 py-4 rounded-xl font-semibold bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 transition flex items-center justify-center gap-2">
-              <Play className="w-5 h-5" />
-              Voir la démo
-            </Link>
+            </button>
           </motion.div>
 
           {/* Trust Badges */}
@@ -433,8 +463,8 @@ export default function Landing() {
             viewport={{ once: true }}
             className="text-center mt-12"
           >
-            <Link href="/demo" className="inline-flex items-center gap-2 text-violet-600 font-semibold hover:gap-3 transition-all">
-              Voir tous les modules <ChevronRight className="w-5 h-5" />
+            <Link href="/auth/register" className="inline-flex items-center gap-2 text-violet-600 font-semibold hover:gap-3 transition-all">
+              Commencer maintenant <ChevronRight className="w-5 h-5" />
             </Link>
           </motion.div>
         </div>
@@ -622,7 +652,6 @@ export default function Landing() {
             <div>
               <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Produit</h4>
               <ul className="space-y-2 text-sm text-gray-500">
-                <li><Link href="/demo" className="hover:text-violet-600">Démo</Link></li>
                 <li><Link href="/auth/pricing" className="hover:text-violet-600">Tarifs</Link></li>
                 <li><Link href="/dashboard" className="hover:text-violet-600">Dashboard</Link></li>
               </ul>
@@ -636,7 +665,7 @@ export default function Landing() {
             </div>
             <div>
               <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Contact</h4>
-              <p className="text-sm text-gray-500">contact@leadflow-ia.fr</p>
+              <p className="text-sm text-gray-500">lucas.legrand567@gmail.com</p>
             </div>
           </div>
           <div className="text-center pt-8 border-t border-gray-200 dark:border-gray-800">
