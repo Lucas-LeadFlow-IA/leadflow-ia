@@ -1,6 +1,6 @@
 import './globals.css'
 import { ThemeProvider } from '@/lib/theme-provider'
-import { StoreProvider } from '@/lib/store-provider'
+import { StoreProvider } from '@/lib/store'
 import { Toaster } from 'react-hot-toast'
 
 export const viewport = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
