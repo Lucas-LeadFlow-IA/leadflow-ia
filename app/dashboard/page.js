@@ -36,10 +36,27 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [upgradeModal, setUpgradeModal] = useState({ open: false, moduleName: '' })
+  const [hydrated, setHydrated] = useState(false)
+  const [lockedModuleName, setLockedModuleName] = useState('')
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
+
+  // Hydration check for Zustand
+  useEffect(() => {
+    const t = setTimeout(() => setHydrated(true), 100)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     if (!user) router.push('/auth/login')
   }, [user, router])
+
+  // Auto-close upgrade toast
+  useEffect(() => {
+    if (showUpgradePrompt) {
+      const t = setTimeout(() => setShowUpgradePrompt(false), 4000)
+      return () => clearTimeout(t)
+    }
+  }, [showUpgradePrompt])
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -70,14 +87,17 @@ export default function DashboardPage() {
     navItems.splice(3, 0, { icon: TrendingUp, label: 'Leads', path: '/dashboard/leads' })
   }
 
-  const filteredModules = getAllModules().filter(m =>
-    m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.description.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const allModules = getAllModules() || []
+  const filteredModules = allModules.filter(m => {
+    if (!m || !m.name) return false
+    const q = (searchQuery || '').toLowerCase()
+    return m.name.toLowerCase().includes(q) || (m.description || '').toLowerCase().includes(q)
+  })
 
   const openModule = (module) => {
     if (!canUseModule(module.id)) {
-      setUpgradeModal({ open: true, moduleName: module.name })
+      setLockedModuleName(module.name)
+      setShowUpgradePrompt(true)
       return
     }
     setSelectedModule(module)
@@ -87,7 +107,10 @@ export default function DashboardPage() {
   }
 
   const handleGenerate = async () => {
-    const remaining = getRemainingRequests()
+    const rawRemaining = getRemainingRequests()
+  const remaining = isFinite(rawRemaining) && !isNaN(rawRemaining)
+    ? Math.max(0, rawRemaining)
+    : 0
     if (remaining <= 0) {
       toast.error(
         <div className="flex flex-col gap-2">
@@ -202,7 +225,10 @@ export default function DashboardPage() {
     }
   }
 
-  const remaining = getRemainingRequests()
+  const rawRemaining = getRemainingRequests()
+  const remaining = isFinite(rawRemaining) && !isNaN(rawRemaining)
+    ? Math.max(0, rawRemaining)
+    : 0
   const limits = { free: 5, pro: 200, agency: 1000 }
   const limit = limits[user.plan] || 5
   const used = user.requestsUsed || 0
