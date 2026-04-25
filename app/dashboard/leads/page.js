@@ -42,6 +42,8 @@ export default function LeadsPage() {
   }
 
   const filteredLeads = trialLeads.filter(lead => {
+    const isOwner = lead.ownerEmail === user?.email || lead.ownerEmail === lead.email
+    if (!isOwner) return false
     const matchesSearch = 
       lead.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lead.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -50,16 +52,17 @@ export default function LeadsPage() {
     return matchesSearch && matchesFilter
   })
 
+  const statsForUser = trialLeads.filter(l => l.ownerEmail === user?.email || l.ownerEmail === l.email)
   const stats = {
-    total: trialLeads.length,
-    new: trialLeads.filter(l => l.status === 'new').length,
-    contacted: trialLeads.filter(l => l.status === 'contacted').length,
-    converted: trialLeads.filter(l => l.status === 'converted').length
+    total: statsForUser.length,
+    new: statsForUser.filter(l => l.status === 'new').length,
+    contacted: statsForUser.filter(l => l.status === 'contacted').length,
+    converted: statsForUser.filter(l => l.status === 'converted').length
   }
 
   const exportCSV = () => {
     const headers = ['Email', 'Nom', 'Entreprise', 'Date', 'Statut']
-    const rows = trialLeads.map(l => [l.email, l.name || '', l.company || '', format(new Date(l.createdAt), 'dd/MM/yyyy'), l.status || 'new'])
+    const rows = filteredLeads.map(l => [l.email, l.name || '', l.company || '', format(new Date(l.createdAt), 'dd/MM/yyyy'), l.status || 'new'])
     const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
     const url = URL.createObjectURL(blob)
@@ -166,7 +169,7 @@ export default function LeadsPage() {
           <div className={`text-center py-20 rounded-3xl ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-white'}`}>
             <Users className={`w-16 h-16 mx-auto mb-4 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-300'}`} />
             <h3 className={`text-xl font-semibold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {trialLeads.length === 0 ? 'Aucun lead capturé' : 'Aucun résultat'}
+              {stats.total === 0 ? 'Aucun lead capturé' : 'Aucun résultat'}
             </h3>
             <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>
               Les leads apparaîtront ici

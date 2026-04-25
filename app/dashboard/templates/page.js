@@ -22,8 +22,9 @@ export default function TemplatesPage() {
   }
 
   const filteredResults = savedResults.filter(r =>
-    r.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    r.result?.toLowerCase().includes(searchQuery.toLowerCase())
+    (r.ownerEmail === user?.email || !r.ownerEmail) &&
+    (r.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    r.result?.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
   const copyToClipboard = (text, id) => {

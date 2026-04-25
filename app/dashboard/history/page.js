@@ -24,6 +24,7 @@ export default function HistoryPage() {
   }
 
   const filteredHistory = history
+    .filter(item => item.ownerEmail === user?.email || !item.ownerEmail)
     .filter(item => filterModule === 'all' || item.moduleId === filterModule)
     .filter(item => 
       !searchQuery || 

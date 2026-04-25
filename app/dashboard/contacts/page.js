@@ -27,9 +27,10 @@ export default function ContactsPage() {
   }
 
   const filteredContacts = contacts.filter(c =>
-    c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (c.ownerEmail === user?.email || !c.ownerEmail) &&
+    (c.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.company?.toLowerCase().includes(searchQuery.toLowerCase())
+    c.company?.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
   const statusColors = {
