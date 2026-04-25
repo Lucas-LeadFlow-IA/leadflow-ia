@@ -1,6 +1,9 @@
 export const metadata = {
   title: 'Conditions Générales d\'Utilisation - LeadFlow IA',
+  description: 'Conditions générales d\'utilisation de LeadFlow IA - Outil de sales automation B2B',
 }
+
+export const viewport = 'width=device-width, initial-scale=1'
 
 export default function TermsPage() {
   return (

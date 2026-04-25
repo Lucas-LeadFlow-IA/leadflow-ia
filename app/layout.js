@@ -2,6 +2,8 @@ import './globals.css'
 import { ThemeProvider } from '@/lib/theme-provider'
 import { Toaster } from 'react-hot-toast'
 
+export const viewport = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
+
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://leadflow.io'),
   title: 'LeadFlow IA Pro — Closez 3x plus de deals avec l\'IA',
@@ -30,7 +32,6 @@ export const metadata = {
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
   },
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
 }
 
 export default function RootLayout({ children }) {

@@ -1,6 +1,9 @@
 export const metadata = {
   title: 'Politique de confidentialité - LeadFlow IA',
+  description: 'Politique de confidentialité et protection des données personnelles LeadFlow IA',
 }
+
+export const viewport = 'width=device-width, initial-scale=1'
 
 export default function PrivacyPage() {
   return (
