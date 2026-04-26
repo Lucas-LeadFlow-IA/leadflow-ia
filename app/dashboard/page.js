@@ -1,79 +1,125 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useStore } from '@/lib/store'
 import { getAllModules } from '@/lib/modules'
-import { motion } from 'framer-motion'
-import toast from 'react-hot-toast'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Zap, LayoutDashboard, Clock, Users, Settings, FileText, Moon, Sun,
-  Search, Star, ChevronRight, Bot, Sparkles, TrendingUp, Mail, MessageSquare,
-  Target, DollarSign, FileSearch, Send, BarChart3, History, X, Copy, Check,
-  LogOut, Bell, Menu, ArrowLeft, Trash2, Save, AlertCircle, CheckCircle2, Lock, Crown
+  Search, Star, ChevronRight, X, Copy, Check, LogOut, Menu, ArrowLeft,
+  Save, FileDown, BookMarked, TrendingUp, History, ChevronDown,
+  Sparkles, Target, BarChart3, AlertCircle, Lock, ArrowRight as ArrowRightIcon,
+  Bell
 } from 'lucide-react'
 import { format } from 'date-fns'
-import { Logo } from '@/components/Logo'
-import { UpgradeModal } from '@/components/ui/UpgradeModal'
+import { fr } from 'date-fns/locale'
 
 export default function DashboardPage() {
   const router = useRouter()
   const pathname = usePathname()
   const {
-    user, theme, toggleTheme, logout, searchQuery, setSearchQuery,
+    user, theme, toggleTheme, logout,
     favorites, toggleFavorite, history, addToHistory,
-    canUseModule, useRequest, getRemainingRequests, selectedModule, setSelectedModule,
-    savedResults, saveResult, contacts, addContact, incrementStat, stats
+    canUseModule, useRequest, getRemainingRequests,
+    selectedModule, setSelectedModule,
+    savedResults, saveResult, incrementStat
   } = useStore()
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [hydrated, setHydrated] = useState(false)
   const [showModulePanel, setShowModulePanel] = useState(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
   const [inputData, setInputData] = useState({})
   const [result, setResult] = useState('')
   const [loading, setLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [notionCopied, setNotionCopied] = useState(false)
+  const [pdfLoading, setPdfLoading] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
-  const [upgradeModal, setUpgradeModal] = useState({ open: false, moduleName: '' })
-  const [hydrated, setHydrated] = useState(false)
+  const [showUpgradeToast, setShowUpgradeToast] = useState(false)
   const [lockedModuleName, setLockedModuleName] = useState('')
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
+  const [activeTab, setActiveTab] = useState('all')
+  const resultRef = useRef(null)
 
-  // Hydration check for Zustand
   useEffect(() => {
-    const t = setTimeout(() => setHydrated(true), 100)
+    const t = setTimeout(() => setHydrated(true), 80)
     return () => clearTimeout(t)
   }, [])
 
   useEffect(() => {
-    if (!user) router.push('/auth/login')
-  }, [user, router])
+    if (hydrated && !user) router.push('/auth/login')
+  }, [user, hydrated, router])
 
-  // Auto-close upgrade toast
   useEffect(() => {
-    if (showUpgradePrompt) {
-      const t = setTimeout(() => setShowUpgradePrompt(false), 4000)
+    if (showUpgradeToast) {
+      const t = setTimeout(() => setShowUpgradeToast(false), 4000)
       return () => clearTimeout(t)
     }
-  }, [showUpgradePrompt])
+  }, [showUpgradeToast])
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (showModulePanel && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault()
-        handleGenerate()
-      }
+    const handleKey = (e) => {
       if (showModulePanel && e.key === 'Escape') {
         setShowModulePanel(false)
-        setIsFullscreen(false)
+        setResult('')
+      }
+      if (showModulePanel && e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !loading) {
+        handleGenerate()
       }
     }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [showModulePanel, inputData, loading])
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [showModulePanel, loading, inputData])
 
-  if (!user) return null
+  if (!hydrated || !user) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/40">
+            <Zap className="w-7 h-7 text-white" />
+          </div>
+          <div className="w-6 h-6 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-500 text-sm">Chargement du dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  const renderModuleIcon = (iconValue) => {
+    if (!iconValue) return <Zap className="w-6 h-6 text-white" />
+    if ([...iconValue].length <= 2) {
+      return <span className="text-2xl leading-none">{iconValue}</span>
+    }
+    const lucideMap = { Zap, Sparkles, TrendingUp, Target, BarChart3, FileText, Users, Star, Clock }
+    const LucideIcon = lucideMap[iconValue]
+    return LucideIcon ? <LucideIcon className="w-6 h-6 text-white" /> : <Zap className="w-6 h-6 text-white" />
+  }
+
+  const allModules = getAllModules() || []
+  const rawRemaining = getRemainingRequests ? getRemainingRequests() : 5
+  const remaining = isFinite(rawRemaining) && !isNaN(rawRemaining) ? Math.max(0, rawRemaining) : 0
+  const limits = { free: 5, pro: 200, agency: 1000 }
+  const limit = limits[user?.plan] || 5
+  const used = limit - remaining
+  const quotaPct = Math.min((used / limit) * 100, 100)
+
+  const filteredModules = allModules.filter(m => {
+    if (!m?.name) return false
+    const q = searchQuery.toLowerCase()
+    const matchesSearch = m.name.toLowerCase().includes(q) || (m.description || '').toLowerCase().includes(q)
+    if (activeTab === 'favorites') return matchesSearch && favorites?.includes(m.id)
+    if (activeTab === 'free') return matchesSearch && !canUseModule ? true : matchesSearch
+    return matchesSearch
+  })
+
+  const stats = [
+    { label: 'Analyses ce mois', value: history?.filter(h => new Date(h.timestamp) > new Date(new Date().setDate(1))).length || 0, icon: BarChart3, color: 'text-violet-400', bg: 'bg-violet-500/10' },
+    { label: 'Total analyses', value: history?.length || 0, icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { label: 'Contacts CRM', value: 0, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+    { label: 'Résultats sauvegardés', value: savedResults?.length || 0, icon: Star, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+  ]
 
   const navItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
@@ -83,21 +129,10 @@ export default function DashboardPage() {
     { icon: Settings, label: 'Paramètres', path: '/dashboard/settings' },
   ]
 
-  if (user.plan === 'agency') {
-    navItems.splice(3, 0, { icon: TrendingUp, label: 'Leads', path: '/dashboard/leads' })
-  }
-
-  const allModules = getAllModules() || []
-  const filteredModules = allModules.filter(m => {
-    if (!m || !m.name) return false
-    const q = (searchQuery || '').toLowerCase()
-    return m.name.toLowerCase().includes(q) || (m.description || '').toLowerCase().includes(q)
-  })
-
   const openModule = (module) => {
-    if (!canUseModule(module.id)) {
+    if (canUseModule && !canUseModule(module.id)) {
       setLockedModuleName(module.name)
-      setShowUpgradePrompt(true)
+      setShowUpgradeToast(true)
       return
     }
     setSelectedModule(module)
@@ -107,557 +142,549 @@ export default function DashboardPage() {
   }
 
   const handleGenerate = async () => {
-    const rawRemaining = getRemainingRequests()
-  const remaining = isFinite(rawRemaining) && !isNaN(rawRemaining)
-    ? Math.max(0, rawRemaining)
-    : 0
     if (remaining <= 0) {
-      toast.error(
-        <div className="flex flex-col gap-2">
-          <p className="font-bold">Quota épuisé</p>
-          <p className="text-sm">Vous avez utilisé toutes vos requêtes</p>
-        </div>,
-        { icon: <AlertCircle className="w-5 h-5 text-red-500" />, duration: 6000 }
-      )
+      setLockedModuleName('quota dépassé')
+      setShowUpgradeToast(true)
       return
     }
-
-    if (!useRequest()) {
-      toast.error('Limite de requêtes atteinte')
-      return
-    }
-
+    if (useRequest) useRequest()
     setLoading(true)
     try {
-      const response = await fetch('/api/ai', {
+      const res = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ moduleId: selectedModule.id, data: inputData })
+        body: JSON.stringify({
+          moduleId: selectedModule.id,
+          data: inputData,
+          plan: user?.plan || 'free',
+          requestsUsed: used,
+        }),
       })
-      const data = await response.json()
-      
-      if (data.error) {
-        toast.error(data.error)
-        setResult('')
-        setLoading(false)
-        return
-      }
-      
-      setResult(data.result || 'Aucun résultat généré')
-      addToHistory({ moduleId: selectedModule.id, moduleName: selectedModule.name, input: inputData, output: data.result })
-      incrementStat('totalRequests')
-      toast.success('Généré avec succès !', {
-        icon: <Sparkles className="w-5 h-5 text-violet-500" />
+      const data = await res.json()
+      const output = data.result || 'Aucun résultat généré.'
+      setResult(output)
+      if (addToHistory) addToHistory({
+        moduleId: selectedModule.id,
+        moduleName: selectedModule.name,
+        input: inputData,
+        output,
+        timestamp: new Date().toISOString(),
       })
-    } catch (error) {
-      setResult('Erreur lors de la génération. Veuillez réessayer.')
+      if (incrementStat) incrementStat('totalRequests')
+    } catch {
+      setResult('Erreur lors de la génération. Vérifiez votre connexion et réessayez.')
     }
     setLoading(false)
   }
 
   const copyResult = () => {
-    if (result) {
-      navigator.clipboard.writeText(result)
-      setCopied(true)
-      toast.success('Copié dans le presse-papiers !', {
-        icon: <Copy className="w-5 h-5 text-violet-500" />
-      })
-      setTimeout(() => setCopied(false), 2000)
-    }
+    navigator.clipboard.writeText(result)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
-  const copyAsMarkdown = () => {
-    if (result) {
-      const md = result
-        .replace(/^📋 /gm, '## ')
-        .replace(/^🎯 /gm, '### ')
-        .replace(/^💰 /gm, '### ')
-        .replace(/^• /gm, '- ')
-        .replace(/^📊 /gm, '## ')
-      navigator.clipboard.writeText(md)
-      toast.success('Copié pour Notion !', {
-        icon: <Copy className="w-5 h-5 text-violet-500" />
-      })
-    }
+  const copyAsNotion = () => {
+    const notionText = result
+      .replace(/^•\s/gm, '- ')
+      .replace(/^(SCORE|DÉTAILS|RECOMMANDATION|ACTION|POINTS CLÉS):/gm, '### $1:')
+    navigator.clipboard.writeText(notionText)
+    setNotionCopied(true)
+    setTimeout(() => setNotionCopied(false), 2500)
   }
 
-  const downloadPDF = () => {
-    if (!result) return
-    const printWindow = window.open('', '_blank')
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>LeadFlow - ${selectedModule.name}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 40px; line-height: 1.6; }
-            h1 { color: #7c3aed; margin-bottom: 20px; }
-            pre { white-space: pre-wrap; font-family: inherit; }
-          </style>
-        </head>
-        <body>
-          <h1>${selectedModule.name}</h1>
-          <p><strong>Date:</strong> ${new Date().toLocaleDateString('fr-FR')}</p>
-          <hr>
-          <pre>${result}</pre>
-        </body>
-      </html>
-    `)
-    printWindow.document.close()
-    printWindow.print()
+  const downloadPDF = async () => {
+    if (!result || pdfLoading) return
+    setPdfLoading(true)
+    const moduleName = selectedModule?.name || 'Résultat'
+    const dateStr = format(new Date(), 'dd/MM/yyyy à HH:mm', { locale: fr })
+    const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>${moduleName} — LeadFlow IA</title>
+    <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#1a1a2e;padding:40px}
+    .header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #7c3aed;padding-bottom:16px;margin-bottom:28px}
+    .logo{font-size:22px;font-weight:800;color:#7c3aed}.meta{font-size:11px;color:#6b7280;text-align:right}
+    .badge{display:inline-block;background:#f3e8ff;color:#7c3aed;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:20px}
+    .content{background:#fafafa;border:1px solid #e5e7eb;border-radius:12px;padding:28px}
+    pre{white-space:pre-wrap;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;line-height:1.75;color:#374151}
+    .footer{margin-top:32px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:10px;color:#9ca3af;text-align:center}
+    </style></head><body>
+    <div class="header"><div class="logo">LeadFlow IA Pro</div><div class="meta">Généré le ${dateStr}</div></div>
+    <div class="badge">${moduleName}</div>
+    <div class="content"><pre>${result.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre></div>
+    <div class="footer">Document généré par LeadFlow IA Pro — Confidentiel</div>
+    </body></html>`
+    const blob = new Blob([html], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const win = window.open(url, '_blank', 'width=800,height=600')
+    if (win) win.onload = () => { win.print(); setTimeout(() => { URL.revokeObjectURL(url); setPdfLoading(false) }, 1000) }
+    else setPdfLoading(false)
   }
 
   const handleSaveResult = () => {
-    if (result) {
+    if (result && saveResult) {
       saveResult(selectedModule.id, result, `${selectedModule.name} - ${format(new Date(), 'dd/MM/yyyy HH:mm')}`)
       setSaveSuccess(true)
-      toast.success('Sauvegardé dans vos favoris !', {
-        icon: <Save className="w-5 h-5 text-violet-500" />
-      })
       setTimeout(() => setSaveSuccess(false), 2000)
     }
   }
 
-  const handleLogout = () => {
-    if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
-      logout()
-      router.push('/')
-    }
+  const handleLogout = async () => {
+    try { await logout?.() } catch {}
+    router.push('/')
   }
 
-  const rawRemaining = getRemainingRequests()
-  const remaining = isFinite(rawRemaining) && !isNaN(rawRemaining)
-    ? Math.max(0, rawRemaining)
-    : 0
-  const limits = { free: 5, pro: 200, agency: 1000 }
-  const limit = limits[user.plan] || 5
-  const used = user.requestsUsed || 0
-  const pct = Math.min((used / limit) * 100, 100)
-
-  const planBadgeColors = {
-    free: 'bg-gray-500/20 text-gray-400 border-gray-500/20',
-    pro: 'bg-violet-500/20 text-violet-300 border-violet-500/20',
-    agency: 'bg-purple-500/20 text-purple-300 border-purple-500/20'
-  }
+  const planLabel = { free: 'Gratuit', pro: 'Pro', agency: 'Agency' }[user?.plan] || 'Gratuit'
+  const planColor = { free: 'bg-gray-700 text-gray-300', pro: 'bg-violet-500/20 text-violet-300 border border-violet-500/20', agency: 'bg-purple-500/20 text-purple-300 border border-purple-500/20' }[user?.plan] || 'bg-gray-700 text-gray-300'
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0a0a0f]' : 'bg-gray-50'}`}>
-      {/* Sidebar Redesign */}
-      <aside className={`
-        ${sidebarOpen ? 'w-64' : 'w-16'} 
-        hidden md:flex flex-col
-        ${theme === 'dark' ? 'bg-[#0d0d15] border-r border-white/5' : 'bg-white border-r border-gray-200'}
-        transition-all duration-300
-        h-screen sticky top-0
-      `}>
-        {/* Logo */}
-        <div className={`flex items-center gap-3 p-4 border-b border-white/5 ${!sidebarOpen && 'justify-center'}`}>
+    <div className={`flex h-screen overflow-hidden ${theme === 'dark' ? 'bg-[#0a0a0f] text-white' : 'bg-gray-50 text-gray-900'}`}>
+
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} hidden md:flex flex-col ${theme === 'dark' ? 'bg-[#0d0d15] border-gray-800' : 'bg-white border-gray-200'} border-r transition-all duration-300 flex-shrink-0`}>
+        <div className={`flex items-center gap-3 p-4 border-b ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'} ${!sidebarOpen && 'justify-center'}`}>
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-violet-500/30">
             <Zap className="w-5 h-5 text-white" />
           </div>
           {sidebarOpen && (
             <div>
-              <p className="font-bold text-white text-sm leading-tight">LeadFlow</p>
-              <p className="text-violet-400 text-xs font-semibold">IA Pro</p>
+              <p className="font-extrabold text-white text-sm leading-tight">LeadFlow</p>
+              <p className="text-violet-400 text-xs font-bold">IA Pro</p>
             </div>
           )}
         </div>
 
-        {/* Nav items */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.path
+          {navItems.map(({ icon: Icon, label, path }) => {
+            const active = pathname === path
             return (
-              <button
-                key={item.path}
-                onClick={() => router.push(item.path)}
-                className={`
-                  w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group
-                  ${isActive
-                    ? 'bg-violet-500/15 text-violet-300 border border-violet-500/20'
-                    : theme === 'dark' ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  }
-                  ${!sidebarOpen && 'justify-center'}
-                `}
-              >
-                <Icon className={`w-4.5 h-4.5 flex-shrink-0 transition-transform group-hover:scale-110 ${isActive ? 'text-violet-400' : ''}`} />
-                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
-                {sidebarOpen && isActive && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-400" />
-                )}
+              <button key={path} onClick={() => router.push(path)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${active ? 'bg-violet-500/15 text-violet-300 border border-violet-500/20' : `${theme === 'dark' ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`} ${!sidebarOpen && 'justify-center'}`}>
+                <Icon className={`w-4.5 h-4.5 flex-shrink-0 ${active ? 'text-violet-400' : ''}`} />
+                {sidebarOpen && <span className="text-sm font-medium">{label}</span>}
+                {sidebarOpen && active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-400" />}
               </button>
             )
           })}
         </nav>
 
-        {/* Quota bar */}
-        {sidebarOpen && user && (
-          <div className="p-4 border-t border-white/5">
+        {sidebarOpen && (
+          <div className={`p-4 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}>
             <div className="flex items-center justify-between mb-3">
-              <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${planBadgeColors[user.plan]}`}>
-                {user.plan === 'free' ? 'Gratuit' : user.plan === 'pro' ? '⚡ Pro' : '🏢 Agency'}
-              </span>
-              {user.plan === 'free' && (
-                <button
-                  onClick={() => router.push('/auth/pricing')}
-                  className="text-xs text-violet-400 hover:text-violet-300 font-semibold"
-                >
-                  Upgrader →
+              <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${planColor}`}>{planLabel}</span>
+              {user?.plan === 'free' && (
+                <button onClick={() => router.push('/auth/pricing')} className="text-xs text-violet-400 hover:text-violet-300 font-semibold">
+                  Upgrader
                 </button>
               )}
             </div>
-            
-            <div>
-              <div className="flex justify-between text-xs mb-1.5">
-                <span className="text-gray-500">Requêtes</span>
-                <span className={pct > 80 ? 'text-red-400 font-semibold' : 'text-gray-400'}>
-                  {used}/{limit}
-                </span>
-              </div>
-              <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    pct > 80 ? 'bg-red-500' : pct > 50 ? 'bg-amber-500' : 'bg-violet-500'
-                  }`}
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
+            <div className="flex justify-between text-xs mb-1.5">
+              <span className={theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}>Requêtes</span>
+              <span className={quotaPct > 80 ? 'text-red-400 font-semibold' : theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{used}/{limit}</span>
+            </div>
+            <div className={`h-1.5 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-white/5' : 'bg-gray-200'}`}>
+              <div className={`h-full rounded-full transition-all duration-500 ${quotaPct > 80 ? 'bg-red-500' : quotaPct > 50 ? 'bg-amber-500' : 'bg-violet-500'}`} style={{ width: `${quotaPct}%` }} />
             </div>
           </div>
         )}
 
-        {/* User footer */}
-        <div className={`p-3 border-t border-white/5 flex items-center gap-3 ${!sidebarOpen && 'justify-center'}`}>
+        <div className={`p-3 border-t ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'} flex items-center gap-3 ${!sidebarOpen && 'justify-center'}`}>
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
             {user?.name?.[0]?.toUpperCase() || 'U'}
           </div>
           {sidebarOpen && (
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-white truncate">{user?.name}</p>
-              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-            </div>
-          )}
-          {sidebarOpen && (
-            <button onClick={handleLogout} className="text-gray-600 hover:text-red-400 transition-colors">
-              <LogOut className="w-4 h-4" />
-            </button>
+            <>
+              <div className="flex-1 min-w-0">
+                <p className={`text-xs font-semibold truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{user?.name}</p>
+                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+              </div>
+              <button onClick={handleLogout} className="text-gray-600 hover:text-red-400 transition-colors">
+                <LogOut className="w-4 h-4" />
+              </button>
+            </>
           )}
         </div>
       </aside>
 
-      {/* Mobile menu overlay */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden" onClick={() => setMobileMenuOpen(false)}>
-          <div className="absolute inset-0 bg-black/50" />
-          <div className={`absolute left-0 top-0 bottom-0 w-64 p-4 ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`} onClick={e => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-6">
-              <Logo size="sm" />
-              <button onClick={() => setMobileMenuOpen(false)}><X className="w-6 h-6" /></button>
-            </div>
-            <nav className="space-y-2">
-              {navItems.map((item) => {
-                const Icon = item.icon
-                const isActive = pathname === item.path
-                return (
-                  <button
-                    key={item.path}
-                    onClick={() => { router.push(item.path); setMobileMenuOpen(false) }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl ${isActive ? 'bg-violet-500/15 text-violet-300' : theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span>{item.label}</span>
-                  </button>
-                )
-              })}
-            </nav>
-          </div>
-        </div>
-      )}
-
-      {/* Main content */}
-      <div className={`transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'md:ml-16'}`}>
-        <header className={`sticky top-0 z-40 backdrop-blur-xl border-b ${theme === 'dark' ? 'bg-[#0a0a0f]/80 border-gray-800/50' : 'bg-white/80 border-gray-200'}`}>
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center gap-4">
-              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="hidden md:block">
-                <Menu className="w-6 h-6" />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className={`sticky top-0 z-40 border-b backdrop-blur-xl ${theme === 'dark' ? 'bg-[#0a0a0f]/90 border-gray-800' : 'bg-white/90 border-gray-200'}`}>
+          <div className="flex items-center justify-between px-6 py-3 gap-4">
+            <div className="flex items-center gap-3">
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="hidden md:block p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                <Menu className="w-5 h-5" />
               </button>
-              <button onClick={() => setMobileMenuOpen(true)} className="md:hidden">
-                <Menu className="w-6 h-6" />
+              <button onClick={() => setMobileMenuOpen(true)} className="md:hidden p-1.5 rounded-lg hover:bg-white/5 transition-colors">
+                <Menu className="w-5 h-5" />
               </button>
               <div className="relative hidden sm:block">
-                <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`} />
-                <input 
-                  type="text" 
-                  value={searchQuery} 
-                  onChange={(e) => setSearchQuery(e.target.value)} 
-                  placeholder="Rechercher un module..." 
-                  className={`w-80 pl-10 pr-4 py-2.5 rounded-xl border transition-all ${theme === 'dark' ? 'bg-gray-800/50 border-gray-700 text-white placeholder-gray-500 focus:border-violet-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-500'}`} 
-                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Rechercher un module..."
+                  className={`w-72 pl-9 pr-4 py-2 rounded-xl border text-sm transition-all ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-violet-500' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-violet-500'} outline-none`} />
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className={`px-3 py-1.5 rounded-lg text-sm font-medium hidden sm:block ${remaining > 10 ? 'bg-emerald-500/20 text-emerald-400' : remaining > 0 ? 'bg-yellow-500/20 text-yellow-400' : 'bg-red-500/20 text-red-400'}`}>
-                {remaining} requêtes
+
+            <div className="flex items-center gap-2">
+              <div className={`px-3 py-1.5 rounded-lg text-xs font-semibold ${remaining > 3 ? 'bg-emerald-500/10 text-emerald-400' : remaining > 0 ? 'bg-amber-500/10 text-amber-400' : 'bg-red-500/10 text-red-400'}`}>
+                {remaining === 0 ? 'Quota atteint' : `${remaining} req.`}
               </div>
-              <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800">
-                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              <button onClick={toggleTheme} className={`p-2 rounded-xl transition-colors ${theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-gray-100'}`}>
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+              <button onClick={() => router.push('/auth/pricing')} className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition-colors">
+                <Zap className="w-3.5 h-3.5" />
+                {user?.plan === 'free' ? 'Passer Pro' : 'Mon plan'}
               </button>
             </div>
           </div>
         </header>
 
-        <main className="p-6">
-          {/* Stats cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`p-4 rounded-2xl stat-card ${theme === 'dark' ? 'bg-[#1a1a28] border border-white/5' : 'bg-white border border-gray-200'}`}
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-violet-500 to-purple-600 flex items-center justify-center mb-3 shadow-lg shadow-violet-500/20">
-                <Sparkles className="w-5 h-5 text-white" />
-              </div>
-              <p className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{stats.totalRequests}</p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>Requêtes IA</p>
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className={`p-4 rounded-2xl stat-card ${theme === 'dark' ? 'bg-[#1a1a28] border border-white/5' : 'bg-white border border-gray-200'}`}
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-600 flex items-center justify-center mb-3 shadow-lg shadow-blue-500/20">
-                <Users className="w-5 h-5 text-white" />
-              </div>
-              <p className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{contacts.length}</p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>Contacts CRM</p>
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className={`p-4 rounded-2xl stat-card ${theme === 'dark' ? 'bg-[#1a1a28] border border-white/5' : 'bg-white border border-gray-200'}`}
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center mb-3 shadow-lg shadow-emerald-500/20">
-                <FileText className="w-5 h-5 text-white" />
-              </div>
-              <p className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{savedResults.length}</p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>Favoris</p>
-            </motion.div>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className={`p-4 rounded-2xl stat-card ${theme === 'dark' ? 'bg-[#1a1a28] border border-white/5' : 'bg-white border border-gray-200'}`}
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 flex items-center justify-center mb-3 shadow-lg shadow-amber-500/20">
-                <History className="w-5 h-5 text-white" />
-              </div>
-              <p className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{history.length}</p>
-              <p className={`text-sm ${theme === 'dark' ? 'text-gray-500' : 'text-gray-600'}`}>Historique</p>
-            </motion.div>
-          </div>
-
-          {/* Welcome */}
-          <div className="mb-8">
-            <h1 className={`text-3xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              Bonjour, {user.name?.split(' ')[0]} 👋
-            </h1>
-            <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>Quel module IA souhaitez-vous utiliser aujourd'hui ?</p>
-          </div>
-
-          {/* Module Cards - Premium Design */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredModules.map((module, index) => {
-              const isFavorite = favorites.includes(module.id)
-              const isLocked = !canUseModule(module.id)
-
-              return (
-                <motion.div
-                  key={module.id}
-                  onClick={() => openModule(module)}
-                  whileHover={!isLocked ? { y: -4, scale: 1.01 } : {}}
-                  whileTap={!isLocked ? { scale: 0.98 } : {}}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                  className={`
-                    relative group cursor-pointer rounded-2xl p-5 border transition-all duration-300
-                    ${!isLocked
-                      ? `${theme === 'dark' ? 'bg-[#1a1a28] border-white/5 hover:border-violet-500/30 hover:shadow-lg hover:shadow-violet-500/10' : 'bg-white border-gray-200 hover:border-violet-500 hover:shadow-xl'}`
-                      : `${theme === 'dark' ? 'bg-[#12121a] border-white/3 opacity-60' : 'bg-gray-50 border-gray-200 opacity-60'}`
-                    }
-                  `}
-                >
-                  {/* Glow effect */}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500/0 to-purple-500/0 group-hover:from-violet-500/5 group-hover:to-purple-500/5 transition-all duration-300" />
-                  
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${module.color} flex items-center justify-center text-xl shadow-lg`}>
-                      {isLocked ? <Lock className="w-5 h-5 text-white" /> : module.icon}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {isFavorite && (
-                        <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                      )}
-                      {!isLocked && (
-                        <ChevronRight className={`w-4 h-4 text-gray-500 group-hover:text-violet-400 group-hover:translate-x-1 transition-all ${theme === 'dark' ? '' : ''}`} />
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Content */}
-                  <div>
-                    <p className={`font-semibold text-sm mb-1 group-hover:text-violet-300 transition-colors ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                      {module.name}
-                    </p>
-                    <p className="text-xs text-gray-500 leading-relaxed">{module.description}</p>
-                  </div>
-
-                  {/* Category */}
-                  <div className="mt-3 pt-3 border-t border-white/5">
-                    <span className="text-xs text-gray-600 uppercase tracking-wide font-medium">
-                      {isLocked ? (
-                        <span className="flex items-center gap-1 text-violet-400">
-                          <Lock className="w-3 h-3" /> Pro requis
-                        </span>
-                      ) : module.category}
-                    </span>
-                  </div>
-                </motion.div>
-              )
-            })}
-          </div>
-        </main>
-      </div>
-
-      {/* Module Panel */}
-      {showModulePanel && selectedModule && (
-        <div 
-          className={`fixed inset-0 z-50 ${isFullscreen ? 'bg-black' : 'bg-black/60'} flex items-center justify-center`} 
-          onClick={() => { setShowModulePanel(false); setIsFullscreen(false) }}
-        >
-          <div 
-            className={`w-full ${isFullscreen ? 'h-screen p-0' : 'max-w-3xl max-h-[90vh] p-6'} ${theme === 'dark' ? 'bg-[#12121a]' : 'bg-white'} overflow-hidden flex flex-col rounded-2xl ${!isFullscreen && 'shadow-2xl shadow-violet-500/20'}`} 
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className={`p-4 border-b flex items-center justify-between flex-shrink-0 ${theme === 'dark' ? 'border-white/5' : 'border-gray-200'}`}>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-                  <Target className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{selectedModule.name}</h2>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{selectedModule.description}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setIsFullscreen(!isFullscreen)} 
-                  className={`p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-gray-100'}`}
-                >
-                  {isFullscreen ? <X className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
-                </button>
-                <button 
-                  onClick={() => { setShowModulePanel(false); setIsFullscreen(false) }} 
-                  className={`p-2 rounded-lg ${theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-gray-100'}`}
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-6 max-w-7xl mx-auto">
+            <div className="mb-8">
+              <h1 className={`text-2xl font-extrabold mb-1 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                Bonjour, {user?.name?.split(' ')[0] || 'vous'}
+              </h1>
+              <p className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
+                Choisissez un module IA pour booster votre prospection B2B
+              </p>
             </div>
 
-            {/* Content */}
-            <div className={`p-6 flex-1 overflow-y-auto ${isFullscreen ? 'p-4' : ''}`}>
-              {/* Form */}
-              <div className="grid gap-4">
-                {selectedModule.fields?.map((field) => (
-                  <div key={field.name}>
-                    <label className={`block text-sm font-medium mb-2 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>{field.label}</label>
-                    {field.type === 'textarea' ? (
-                      <textarea 
-                        value={inputData[field.name] || ''} 
-                        onChange={(e) => setInputData({ ...inputData, [field.name]: e.target.value })} 
-                        placeholder={field.placeholder} 
-                        rows={4} 
-                        className={`w-full p-4 rounded-xl border transition-all ${theme === 'dark' ? 'bg-[#1a1a28] border-white/10 text-white placeholder-gray-500 focus:border-violet-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-500'}`} 
-                      />
-                    ) : (
-                      <input 
-                        type={field.type || 'text'} 
-                        value={inputData[field.name] || ''} 
-                        onChange={(e) => setInputData({ ...inputData, [field.name]: e.target.value })} 
-                        placeholder={field.placeholder} 
-                        className={`w-full p-4 rounded-xl border transition-all ${theme === 'dark' ? 'bg-[#1a1a28] border-white/10 text-white placeholder-gray-500 focus:border-violet-500' : 'bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400 focus:border-violet-500'}`} 
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              {/* Result */}
-              {result && (
-                <div className="mt-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              {stats.map(({ label, value, icon: Icon, color, bg }) => (
+                <div key={label} className={`rounded-2xl p-4 border ${theme === 'dark' ? 'bg-white/3 border-white/5' : 'bg-white border-gray-200 shadow-sm'}`}>
                   <div className="flex items-center justify-between mb-3">
-                    <label className={`text-sm font-semibold uppercase tracking-wider flex items-center gap-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      Résultat
-                    </label>
-                    <div className="flex gap-2">
-                      <button onClick={copyResult} className={`text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${theme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>
-                        {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-                        {copied ? 'Copié!' : 'Copier'}
-                      </button>
-                      <button onClick={copyAsMarkdown} className={`text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${theme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>
-                        Notion
-                      </button>
-                      <button onClick={downloadPDF} className={`text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${theme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>
-                        PDF
-                      </button>
-                      <button onClick={handleSaveResult} className="text-xs px-3 py-1.5 rounded-lg bg-violet-500/20 text-violet-400 hover:bg-violet-500/30 flex items-center gap-1.5 transition-all">
-                        {saveSuccess ? <Check className="w-3 h-3" /> : <Save className="w-3 h-3" />}
-                        {saveSuccess ? 'Sauvegardé!' : 'Sauvegarder'}
-                      </button>
+                    <div className={`w-9 h-9 rounded-xl ${bg} flex items-center justify-center`}>
+                      <Icon className={`w-4.5 h-4.5 ${color}`} />
                     </div>
                   </div>
-                  <div className={`p-5 rounded-2xl whitespace-pre-wrap border-2 ${theme === 'dark' ? 'bg-[#1a1a28] border-violet-500/30' : 'bg-violet-50 border-violet-200'}`}>
-                    <pre className={`whitespace-pre-wrap font-mono text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{result}</pre>
+                  <p className={`text-2xl font-extrabold mb-0.5 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{value}</p>
+                  <p className="text-xs text-gray-500">{label}</p>
+                </div>
+              ))}
+            </div>
+
+            {user?.plan === 'free' && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 rounded-2xl p-5 bg-gradient-to-r from-violet-900/40 to-purple-900/30 border border-violet-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-5 h-5 text-violet-400" />
                   </div>
+                  <div>
+                    <p className="font-bold text-white text-sm">Débloquez les 10 modules Pro</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Emails IA · Scripts · Objections · ROI · Séquences · Proposals...</p>
+                  </div>
+                </div>
+                <button onClick={() => router.push('/auth/pricing')}
+                  className="flex-shrink-0 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold transition-colors flex items-center gap-2">
+                  Voir les plans <ArrowRightIcon className="w-4 h-4" />
+                </button>
+              </motion.div>
+            )}
+
+            <div className="flex items-center gap-2 mb-5 flex-wrap">
+              {['all', 'favorites'].map(tab => (
+                <button key={tab} onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${activeTab === tab ? 'bg-violet-500/20 text-violet-300 border border-violet-500/20' : `${theme === 'dark' ? 'text-gray-500 hover:text-gray-300 hover:bg-white/5' : 'text-gray-400 hover:text-gray-700 hover:bg-gray-100'}`}`}>
+                  {tab === 'all' ? `Tous les modules (${allModules.length})` : `Favoris (${favorites?.length || 0})`}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredModules.map((module, index) => {
+                const isFavorite = favorites?.includes(module.id)
+                const isLocked = canUseModule ? !canUseModule(module.id) : false
+
+                return (
+                  <motion.div
+                    key={module.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.04, duration: 0.3 }}
+                    onClick={() => openModule(module)}
+                    className={`relative group cursor-pointer rounded-2xl p-5 border transition-all duration-200 ${
+                      isLocked
+                        ? `${theme === 'dark' ? 'bg-white/2 border-white/5' : 'bg-gray-50 border-gray-200'} opacity-70`
+                        : `${theme === 'dark' ? 'bg-white/4 border-white/7 hover:border-violet-500/40 hover:bg-white/7' : 'bg-white border-gray-200 hover:border-violet-400 hover:shadow-lg'}`
+                    }`}
+                  >
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500/0 to-purple-500/0 group-hover:from-violet-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none" />
+
+                    <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                      {!isLocked && (
+                        <button
+                          onClick={e => { e.stopPropagation(); toggleFavorite?.(module.id) }}
+                          className={`p-1 rounded-lg transition-all opacity-0 group-hover:opacity-100 ${isFavorite ? 'opacity-100 text-amber-400' : 'text-gray-600 hover:text-amber-400'}`}
+                        >
+                          <Star className={`w-3.5 h-3.5 ${isFavorite ? 'fill-amber-400' : ''}`} />
+                        </button>
+                      )}
+                      {isLocked && (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 border border-violet-500/20 font-semibold flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5" />Pro
+                        </span>
+                      )}
+                    </div>
+
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
+                      isLocked ? `${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-200'}` : `bg-gradient-to-br ${module.color || 'from-violet-500 to-purple-600'}`
+                    }`}>
+                      {isLocked
+                        ? <Lock className="w-5 h-5 text-gray-500" />
+                        : renderModuleIcon(module.icon)
+                      }
+                    </div>
+
+                    <h3 className={`font-bold text-sm mb-1.5 transition-colors ${isLocked ? 'text-gray-600' : theme === 'dark' ? 'text-white group-hover:text-violet-300' : 'text-gray-900 group-hover:text-violet-700'}`}>
+                      {module.name}
+                    </h3>
+                    <p className={`text-xs leading-relaxed mb-4 ${isLocked ? 'text-gray-700' : 'text-gray-500'}`}>
+                      {module.description}
+                    </p>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-lg ${
+                        isLocked
+                          ? `${theme === 'dark' ? 'bg-gray-800 text-gray-600' : 'bg-gray-200 text-gray-500'}`
+                          : `${theme === 'dark' ? 'bg-violet-500/15 text-violet-400' : 'bg-violet-50 text-violet-600'}`
+                      }`}>
+                        {module.category || 'IA'}
+                      </span>
+                      {!isLocked && (
+                        <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-violet-400 group-hover:translate-x-0.5 transition-all" />
+                      )}
+                    </div>
+                  </motion.div>
+                )
+              })}
+
+              {filteredModules.length === 0 && (
+                <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                  <Search className="w-12 h-12 text-gray-700 mb-4" />
+                  <p className="text-gray-400 font-semibold mb-1">Aucun module trouvé</p>
+                  <button onClick={() => { setSearchQuery(''); setActiveTab('all') }}
+                    className="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+                    Voir tous les modules
+                  </button>
                 </div>
               )}
             </div>
 
-            {/* Footer */}
-            <div className={`p-4 border-t flex-shrink-0 ${theme === 'dark' ? 'border-white/5' : 'border-gray-200'}`}>
-              <button 
-                onClick={handleGenerate} 
-                disabled={loading}
-                className="w-full py-4 rounded-2xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:from-violet-500 hover:to-purple-500 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40 transition-all"
-              >
-                {loading ? (
-                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    <span>Générer avec l'IA</span>
-                  </>
-                )}
+            {history && history.length > 0 && (
+              <div className="mt-10">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className={`text-base font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Activité récente</h2>
+                  <button onClick={() => router.push('/dashboard/history')} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+                    Voir tout
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {history.slice(0, 4).map((h, i) => (
+                    <div key={i} className={`flex items-center gap-4 p-4 rounded-xl border transition-colors ${theme === 'dark' ? 'bg-white/3 border-white/5 hover:bg-white/5' : 'bg-white border-gray-200 hover:bg-gray-50'}`}>
+                      <div className="w-9 h-9 rounded-xl bg-violet-500/10 flex items-center justify-center text-lg flex-shrink-0">
+                        {allModules.find(m => m.id === h.moduleId)?.icon || '🤖'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-semibold truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{h.moduleName || h.moduleId}</p>
+                        <p className="text-xs text-gray-500 truncate">{h.output?.slice(0, 80)}</p>
+                      </div>
+                      <p className="text-xs text-gray-600 flex-shrink-0">
+                        {h.timestamp ? format(new Date(h.timestamp), 'dd/MM HH:mm') : ''}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+
+      <AnimatePresence>
+        {showModulePanel && selectedModule && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => { setShowModulePanel(false); setResult('') }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50" />
+            <motion.div
+              initial={{ opacity: 0, x: '100%' }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+              className={`fixed right-0 top-0 bottom-0 w-full max-w-2xl z-50 overflow-y-auto ${theme === 'dark' ? 'bg-[#0f0f1a]' : 'bg-white'} shadow-2xl`}
+            >
+              <div className={`sticky top-0 z-10 p-5 border-b ${theme === 'dark' ? 'bg-[#0f0f1a]/95 backdrop-blur-xl border-white/5' : 'bg-white/95 backdrop-blur-xl border-gray-200'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${selectedModule.color || 'from-violet-500 to-purple-600'} flex items-center justify-center`}>
+                      {renderModuleIcon(selectedModule.icon)}
+                    </div>
+                    <div>
+                      <p className={`font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{selectedModule.name}</p>
+                      <p className="text-xs text-gray-500">{selectedModule.category}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 hidden sm:block">Ctrl+Enter pour générer</span>
+                    <button onClick={() => { setShowModulePanel(false); setResult('') }}
+                      className={`p-2 rounded-xl transition-colors ${theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-gray-100'}`}>
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                <div className="space-y-4">
+                  {selectedModule.fields?.map(field => (
+                    <div key={field.name}>
+                      <label className={`block text-sm font-semibold mb-1.5 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                        {field.label} {field.required && <span className="text-red-400">*</span>}
+                      </label>
+                      {field.type === 'textarea' ? (
+                        <textarea
+                          value={inputData[field.name] || ''}
+                          onChange={e => setInputData(p => ({ ...p, [field.name]: e.target.value }))}
+                          placeholder={field.placeholder}
+                          rows={4}
+                          className={`w-full px-4 py-3 rounded-xl border text-sm resize-none transition-all outline-none ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white placeholder-gray-600 focus:border-violet-500' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-violet-500'}`}
+                        />
+                      ) : field.type === 'select' ? (
+                        <select
+                          value={inputData[field.name] || ''}
+                          onChange={e => setInputData(p => ({ ...p, [field.name]: e.target.value }))}
+                          className={`w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white focus:border-violet-500' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-violet-500'}`}
+                        >
+                          <option value="">Choisir...</option>
+                          {field.options?.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={inputData[field.name] || ''}
+                          onChange={e => setInputData(p => ({ ...p, [field.name]: e.target.value }))}
+                          placeholder={field.placeholder}
+                          className={`w-full px-4 py-3 rounded-xl border text-sm transition-all outline-none ${theme === 'dark' ? 'bg-white/5 border-white/10 text-white placeholder-gray-600 focus:border-violet-500' : 'bg-gray-50 border-gray-200 text-gray-900 focus:border-violet-500'}`}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <button onClick={handleGenerate} disabled={loading}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-bold text-base transition-all shadow-lg shadow-violet-500/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3">
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                      Génération en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Générer avec l'IA
+                    </>
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {result && (
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className={`text-sm font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Résultat IA</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {[
+                            { label: copied ? 'Copié!' : 'Copier', icon: copied ? Check : Copy, action: copyResult, active: copied },
+                            { label: notionCopied ? 'Notion' : 'Notion', icon: BookMarked, action: copyAsNotion, active: notionCopied },
+                            { label: pdfLoading ? '...' : 'PDF', icon: FileDown, action: downloadPDF },
+                            { label: saveSuccess ? 'Sauvegardé!' : 'Sauvegarder', icon: saveSuccess ? Check : Save, action: handleSaveResult, active: saveSuccess },
+                          ].map(({ label, icon: Icon, action, active }) => (
+                            <button key={label} onClick={action}
+                              className={`text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all ${active ? 'bg-emerald-500/20 text-emerald-400' : theme === 'dark' ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}>
+                              <Icon className="w-3 h-3" />{label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div ref={resultRef} className={`rounded-2xl p-5 border ${theme === 'dark' ? 'bg-violet-500/5 border-violet-500/20' : 'bg-violet-50 border-violet-200'}`}>
+                        <pre className={`whitespace-pre-wrap text-sm leading-relaxed font-sans ${theme === 'dark' ? 'text-gray-200' : 'text-gray-800'}`}>{result}</pre>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showUpgradeToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 80, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 80, scale: 0.9 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 bg-[#1a1a28] border border-violet-500/30 rounded-2xl px-5 py-4 shadow-2xl shadow-violet-500/20 max-w-md w-full mx-4"
+          >
+            <div className="w-9 h-9 rounded-xl bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+              <Zap className="w-5 h-5 text-violet-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-white">Module Pro requis</p>
+              <p className="text-xs text-gray-400">Débloquez <strong className="text-violet-400">{lockedModuleName}</strong> avec le plan Pro</p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => { router.push('/auth/pricing'); setShowUpgradeToast(false) }}
+                className="text-xs px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-500 text-white font-semibold transition-colors whitespace-nowrap">
+                49€/mois
+              </button>
+              <button onClick={() => setShowUpgradeToast(false)} className="text-gray-600 hover:text-gray-300 transition-colors p-1">
+                <X className="w-4 h-4" />
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Upgrade Modal */}
-      <UpgradeModal
-        isOpen={upgradeModal.open}
-        moduleName={upgradeModal.moduleName}
-        onClose={() => setUpgradeModal({ open: false, moduleName: '' })}
-      />
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)} className="fixed inset-0 bg-black/60 z-50 md:hidden" />
+            <motion.div
+              initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className={`fixed left-0 top-0 bottom-0 w-72 z-50 md:hidden ${theme === 'dark' ? 'bg-[#0d0d15]' : 'bg-white'} flex flex-col`}
+            >
+              <div className="flex items-center justify-between p-4 border-b border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="font-bold text-white">LeadFlow IA</span>
+                </div>
+                <button onClick={() => setMobileMenuOpen(false)} className="text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
+              </div>
+              <nav className="flex-1 p-3 space-y-1">
+                {navItems.map(({ icon: Icon, label, path }) => (
+                  <button key={path} onClick={() => { router.push(path); setMobileMenuOpen(false) }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors text-left ${pathname === path ? 'bg-violet-500/15 text-violet-300' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{label}</span>
+                  </button>
+                ))}
+              </nav>
+              <div className="p-4 border-t border-white/5">
+                <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors">
+                  <LogOut className="w-5 h-5" />
+                  <span className="font-medium">Déconnexion</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </div>
   )
 }

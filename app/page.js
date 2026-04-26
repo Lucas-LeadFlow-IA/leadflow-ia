@@ -4,192 +4,149 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useInView } from 'framer-motion'
-import { ArrowRight, Sparkles, Zap, Shield, Clock, Users, Check, Star, Quote, Menu, X, Play, Target, Mail, MessageSquare, Phone, CreditCard, ThumbsUp, AlertCircle, ChevronRight, Gift, Download, Search, FileText, Lock, UsersRound, Rocket, BarChart, DollarSign, ArrowDown, TrendingUp, Headphones } from 'lucide-react'
+import { 
+  ArrowRight, Sparkles, Zap, Shield, Clock, Users, Check, Star, Menu, X, Play, Target, Mail, 
+  MessageSquare, Phone, CreditCard, ThumbsUp, AlertCircle, ChevronRight, Gift, Download, Search, FileText, 
+  Lock, Rocket, BarChart, DollarSign, TrendingUp, Headphones, Calculator, Users2, Award, CheckCircle2,
+  Building2, MailOpen, PhoneCall, Calendar, Handshake, ZapIcon, FileCheck, Timer, Percent
+} from 'lucide-react'
 import { useTheme } from '@/lib/theme-provider'
 import { useStore } from '@/lib/store'
 
 const features = [
-  { 
-    icon: Target, 
-    title: 'Qualification BANT', 
-    desc: 'Scorez vos prospects en 30 secondes',
-    color: 'from-indigo-500 to-purple-500'
-  },
-  { 
-    icon: Mail, 
-    title: 'Emails IA', 
-    desc: 'Générez des emails personnalisés',
-    color: 'from-emerald-500 to-teal-500'
-  },
-  { 
-    icon: Search, 
-    title: 'Recherche LinkedIn', 
-    desc: 'Trouvez les prospects qualifiés',
-    color: 'from-blue-500 to-cyan-500'
-  },
-  { 
-    icon: Phone, 
-    title: 'Scripts Appel', 
-    desc: 'Scripts de cold call qui convertissent',
-    color: 'from-purple-500 to-pink-500'
-  },
-  { 
-    icon: MessageSquare, 
-    title: 'Gestion Objections', 
-    desc: 'Techniques de closing pro',
-    color: 'from-rose-500 to-red-500'
-  },
-  { 
-    icon: FileText, 
-    title: 'Séquences Email', 
-    desc: 'Follow-ups optimisés',
-    color: 'from-green-500 to-emerald-500'
-  },
+  { icon: Target, title: 'Qualification IA', desc: 'Scorez vos prospects BANT en 30 secondes', color: 'from-indigo-500 to-purple-500', benefit: '3x plus de leads qualifiés' },
+  { icon: Mail, title: 'Emails Perso', desc: 'Générez des emails qui convertissent', color: 'from-emerald-500 to-teal-500', benefit: '38% taux de réponse' },
+  { icon: Phone, title: 'Scripts Closing', desc: 'Appels qui ferment les deals', color: 'from-purple-500 to-pink-500', benefit: '+50% de closes' },
+  { icon: MessageSquare, title: 'Objections', desc: 'Réponses prêtes à l\'emploi', color: 'from-rose-500 to-red-500', benefit: '100% paré' },
 ]
 
-const stats = [
-  { value: 10000, suffix: '+', label: 'Leads qualifiés', prefix: '' },
-  { value: 50000, suffix: '+', label: 'Emails générés', prefix: '' },
-  { value: 98, suffix: '%', label: 'Satisfaction', prefix: '' },
-  { value: 500, suffix: '+', label: 'Utilisateurs', prefix: '' },
-]
+const socialProof = {
+  users: 2847,
+  emailsGenerated: 89420,
+  dealsWon: 12450,
+  satisfaction: 98
+}
 
 const testimonials = [
-  { 
-    quote: "+47% de leads qualifiés en 4 semaines. LeadFlow a transformé notre prospection!",
-    author: "Marie Dupont",
-    role: "Sales Director",
-    company: "TechScale",
-    result: "+47%",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Marie"
-  },
-  { 
-    quote: "2h/jour économisées sur la qualification. Je peux me concentrer sur les deals.",
-    author: "Thomas Martin",
-    role: "Commercial B2B",
-    company: "GrowthAgency",
-    result: "2h/jour",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Thomas"
-  },
-  { 
-    quote: "+30% de deals fermés avec les scripts IA. Incroyable!",
-    author: "Sophie Bernard",
-    role: "Account Executive",
-    company: "ScaleUp",
-    result: "+30%",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie"
-  },
-  { 
-    quote: "Les emails IA ontboosté mon taux de réponse de 3x. Je recommande à tout commercial!",
-    author: "Lucas Bernard",
-    role: "SDR",
-    company: "CloudTech",
-    result: "3x",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lucas"
-  },
-  { 
-    quote: " finally une outil qui me fait gagner du temps concret. ROI en 2 semaines.",
-    author: "Julie Moreau",
-    role: "Head of Sales",
-    company: "DataPro",
-    result: "2sem",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Julie"
-  },
+  { quote: "J'ai généré 47% de leads qualifiés en 4 semaines. Incroyable!", author: "Marie D.", role: "Sales Director", company: "TechScale", result: "+47%", industry: "SaaS" },
+  { quote: "2h/jour économisées. Je me concentre sur les deals, pas sur le scanning.", author: "Thomas M.", role: "Commercial B2B", company: "GrowthAgency", result: "2h/jour", industry: "Agency" },
+  { quote: "Nos scripts de prospection dopés à l'IA ont boosté nos closings de 30%.", author: "Sophie B.", role: "Head of Sales", company: "ScaleUp", result: "+30%", industry: "Tech" },
+  { quote: "Taux de réponse divisé par 3. Mes emails sont enfin lus et répondus.", author: "Lucas R.", role: "SDR", company: "CloudTech", result: "3x", industry: "Cloud" },
+]
+
+const comparison = [
+  { feature: 'Modules IA', leadflow: '12', others: '3-5' },
+  { feature: 'CRM intégré', leadflow: true, others: false },
+  { feature: 'Scripts de vente', leadflow: true, others: 'Option payante' },
+  { feature: 'Emails/mois', leadflow: '200', others: '50' },
+  { feature: 'Export données', leadflow: true, others: 'Payant' },
+  { feature: 'API access', leadflow: true, others: false },
 ]
 
 const plans = [
-  { id: 'free', name: 'Gratuit', price: 0, priceYearly: 0, period: 'pour toujours', features: ['3 modules IA', '5 démos/mois', 'Historique limité'] },
-  { id: 'pro', name: 'Pro', price: 49, priceYearly: 39, period: '/mois', popular: true, features: ['12 modules IA', '200 req/mois', 'Historique illimité', 'Emails IA', 'Scripts de vente'] },
-  { id: 'agency', name: 'Agency', price: 149, priceYearly: 119, period: '/mois', features: ['1000 req/mois', ' Équipe (5)', 'API Keys', 'Support dédié'] },
+  { 
+    id: 'free', 
+    name: 'Découverte', 
+    price: 0, 
+    period: 'pour toujours',
+    desc: 'Testez sans risque',
+    features: ['5 démos/mois', '3 modules IA', 'Historique (50)', 'Support community'],
+    cta: 'Essayer gratuit',
+    highlight: false
+  },
+  { 
+    id: 'pro', 
+    name: 'Pro', 
+    price: 49, 
+    priceYearly: 39,
+    period: '/mois',
+    desc: 'Pour les commerciaux',
+    features: ['200 req/mois', '12 modules IA', 'CRM illimité', 'Scripts premium', 'Export CSV/JSON', 'Emails IA', 'Prioritaire'],
+    cta: 'Démarrer Pro',
+    highlight: true,
+    popular: true,
+    savings: 120
+  },
+  { 
+    id: 'agency', 
+    name: 'Agency', 
+    price: 149, 
+    priceYearly: 119,
+    period: '/mois',
+    desc: 'Pour les équipes',
+    features: ['1000 req/mois', '5 utilisateurs', 'API Keys', 'Segmentation', 'Support dédié', 'Formation équipe'],
+    cta: 'Devis gratuit',
+    highlight: false,
+    savings: 360
+  },
 ]
 
-const trustBadges = [
-  { icon: Shield, label: 'Sécurisé SSL' },
-  { icon: Lock, label: 'Données chiffrées' },
-  { icon: CreditCard, label: 'Paiement sécurisé' },
-  { icon: ThumbsUp, label: '98% satisfait' },
+const guarantees = [
+  { icon: Shield, title: '30 jours satisfait', desc: 'Remboursement intégral' },
+  { icon: Lock, title: 'Données sécurisées', desc: 'Hébergement GDPR' },
+  { icon: CreditCard, title: 'Sans engagement', desc: 'Résiliation anytime' },
 ]
 
-const leadsMagnets = [
-  { title: 'Guide : 10 scripts qui tuent les objections', downloads: 1247 },
-  { title: 'Checklist : Qualifier un lead en 30s', downloads: 892 },
-  { title: 'Template : Email de prospection parfait', downloads: 2103 },
-]
-
-function CountdownTimer() {
-  const [timeLeft, setTimeLeft] = useState({ days: 7, hours: 0, minutes: 0, seconds: 0 })
-  const [isClient, setIsClient] = useState(false)
+function ROICalculator() {
+  const router = useRouter()
+  const { theme } = useStore()
+  const [commercials, setCommercials] = useState(3)
+  const [salary, setSalary] = useState(3500)
+  const [conversion, setConversion] = useState(15)
+  const [avgDeal, setAvgDeal] = useState(2500)
   
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-  
-  useEffect(() => {
-    if (!isClient) return
-    
-    const STORAGE_KEY = 'leadflow_offer_end'
-    const OFFER_DURATION_MS = 7 * 24 * 60 * 60 * 1000 // 7 jours
-    
-    // Charger ou créer la date de fin
-    let endDateStr = localStorage.getItem(STORAGE_KEY)
-    let endDate
-    
-    if (endDateStr) {
-      endDate = new Date(endDateStr)
-    } else {
-      // Première visite: date fixe à 7 jours depuis maintenant
-      endDate = new Date(Date.now() + OFFER_DURATION_MS)
-      localStorage.setItem(STORAGE_KEY, endDate.toISOString())
-    }
-    
-    const calculateTimeLeft = () => {
-      const now = new Date().getTime()
-      const endTime = endDate.getTime()
-      const diff = endTime - now
-      
-      if (diff <= 0) {
-        return { days: 0, hours: 0, minutes: 0, seconds: 0 }
-      }
-      
-      return {
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((diff / (1000 * 60)) % 60),
-        seconds: Math.floor((diff / 1000) % 60)
-      }
-    }
-    
-    setTimeLeft(calculateTimeLeft())
-    
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft())
-    }, 1000)
-    
-    return () => clearInterval(timer)
-  }, [isClient])
-
-  // Render simple pendant SSR
-  if (!isClient) {
-    return (
-      <div className="flex items-center gap-2 text-red-500 font-mono text-lg font-bold">
-        <span className="bg-red-500/20 px-3 py-1 rounded-lg">07</span>
-        <span>j</span>
-        <span className="bg-red-500/20 px-3 py-1 rounded-lg">00</span>
-        <span>h</span>
-        <span className="bg-red-500/20 px-3 py-1 rounded-lg">00</span>
-        <span>m</span>
-      </div>
-    )
-  }
+  const monthlyCost = commercials * salary
+  const leadsGenerated = commercials * 50 * (conversion / 100)
+  const revenue = leadsGenerated * avgDeal
+  const roi = monthlyCost > 0 ? ((revenue - monthlyCost) / monthlyCost * 100) : 0
   
   return (
-    <div className="flex items-center gap-2 text-red-500 font-mono text-lg font-bold">
-      <span className="bg-red-500/20 px-3 py-1 rounded-lg">{String(timeLeft.days).padStart(2, '0')}</span>
-      <span>j</span>
-      <span className="bg-red-500/20 px-3 py-1 rounded-lg">{String(timeLeft.hours).padStart(2, '0')}</span>
-      <span>h</span>
-      <span className="bg-red-500/20 px-3 py-1 rounded-lg">{String(timeLeft.minutes).padStart(2, '0')}</span>
-      <span>m</span>
+    <div className={`p-6 rounded-2xl ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'}`}>
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm text-gray-400 mb-2 block">Nombre de commerciaux</label>
+            <input type="range" min="1" max="10" value={commercials} onChange={(e) => setCommercials(Number(e.target.value))} className="w-full" />
+            <div className="text-2xl font-bold text-white">{commercials}</div>
+          </div>
+          <div>
+            <label className="text-sm text-gray-400 mb-2 block">Salaire mensuel (€)</label>
+            <input type="range" min="2500" max="8000" step="500" value={salary} onChange={(e) => setSalary(Number(e.target.value))} className="w-full" />
+            <div className="text-2xl font-bold text-white">{salary}€</div>
+          </div>
+          <div>
+            <label className="text-sm text-gray-400 mb-2 block">Taux conversion (%)</label>
+            <input type="range" min="5" max="30" value={conversion} onChange={(e) => setConversion(Number(e.target.value))} className="w-full" />
+            <div className="text-2xl font-bold text-white">{conversion}%</div>
+          </div>
+          <div>
+            <label className="text-sm text-gray-400 mb-2 block">Panier moyen (€)</label>
+            <input type="range" min="500" max="10000" step="500" value={avgDeal} onChange={(e) => setAvgDeal(Number(e.target.value))} className="w-full" />
+            <div className="text-2xl font-bold text-white">{avgDeal}€</div>
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className={`p-4 rounded-xl ${roi > 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'}`}>
+            <div className="text-sm text-gray-400">ROI potentiel</div>
+            <div className={`text-4xl font-bold ${roi > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              {roi > 0 ? '+' : ''}{Math.round(roi)}%
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-white'}`}>
+              <div className="text-xs text-gray-400">Revenus/mois</div>
+              <div className="text-lg font-bold text-white">{Math.round(revenue).toLocaleString()}€</div>
+            </div>
+            <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-gray-700/50' : 'bg-white'}`}>
+              <div className="text-xs text-gray-400">Économies</div>
+              <div className="text-lg font-bold text-white">{commercials * 2}h/sem</div>
+            </div>
+          </div>
+          <div className="text-xs text-gray-500 text-center">
+            * Estimation basée sur 50 leads/commercial/mois
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -219,13 +176,8 @@ function StatCounter({ value, suffix, label, prefix }) {
   }, [isInView, value])
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      className="text-center"
-    >
-      <div className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">
+    <motion.div ref={ref} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} className="text-center">
+      <div className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">
         {prefix}{count.toLocaleString()}{suffix}
       </div>
       <div className="text-sm text-gray-500 mt-1">{label}</div>
@@ -233,61 +185,63 @@ function StatCounter({ value, suffix, label, prefix }) {
   )
 }
 
-function FeatureCard({ feature, index }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.1 }}
-      whileHover={{ y: -5 }}
-      className="group p-6 rounded-2xl bg-white/5 dark:bg-white/5 border border-white/10 dark:border-white/10 backdrop-blur-sm hover:border-violet-500/50 transition-all cursor-pointer"
-    >
-      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-        <feature.icon className="w-6 h-6 text-white" />
-      </div>
-      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
-      <p className="text-gray-600 dark:text-gray-400 text-sm">{feature.desc}</p>
-    </motion.div>
-  )
-}
+function CountdownBanner() {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+  const [visible, setVisible] = useState(true)
 
-function LeadMagnet() {
+  useEffect(() => {
+    const STORAGE_KEY = 'leadflow_promo_end'
+    let endDate = localStorage.getItem(STORAGE_KEY)
+    if (!endDate) {
+      endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      localStorage.setItem(STORAGE_KEY, endDate)
+    }
+    const end = new Date(endDate)
+
+    const tick = () => {
+      const now = new Date()
+      const diff = end - now
+      if (diff <= 0) {
+        setVisible(false)
+        return
+      }
+      setTimeLeft({
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+        minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+        seconds: Math.floor((diff % (1000 * 60)) / 1000),
+      })
+    }
+
+    tick()
+    const interval = setInterval(tick, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  if (!visible) return null
+
   return (
-    <section className="py-16 px-6 bg-gradient-to-r from-violet-600 to-purple-600">
-      <div className="max-w-4xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <Gift className="w-12 h-12 text-white mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-white mb-2">
-            Téléchargez nos guides gratuits
-          </h2>
-          <p className="text-violet-100 mb-6">
-            Resources exclusives pour booster votre prospection
-          </p>
-          <div className="grid md:grid-cols-3 gap-4">
-            {leadsMagnets.map((item, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ scale: 1.02 }}
-                className="bg-white/10 backdrop-blur-sm rounded-xl p-4 cursor-pointer hover:bg-white/20 transition"
-              >
-                <div className="flex items-center gap-3">
-                  <Download className="w-8 h-8 text-white" />
-                  <div className="text-left">
-                    <p className="text-white font-medium text-sm">{item.title}</p>
-                    <p className="text-violet-200 text-xs">{item.downloads.toLocaleString()} téléchargements</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-    </section>
+    <div className="bg-gradient-to-r from-violet-600 to-purple-600 text-white py-2.5 px-4 text-center text-sm font-semibold">
+      <span className="mr-3">Offre lancement</span>
+      <span className="font-bold text-yellow-300">-20% sur tous les plans</span>
+      <span className="mx-3">|</span>
+      <span className="inline-flex items-center gap-2">
+        Fin dans :
+        {[
+          { v: timeLeft.days, l: 'j' },
+          { v: timeLeft.hours, l: 'h' },
+          { v: timeLeft.minutes, l: 'm' },
+          { v: timeLeft.seconds, l: 's' },
+        ].map(({ v, l }) => (
+          <span key={l} className="inline-flex items-center gap-0.5">
+            <span className="bg-black/30 rounded-md px-1.5 py-0.5 font-mono font-bold text-white">
+              {String(v).padStart(2, '0')}
+            </span>
+            <span className="text-white/70 text-xs">{l}</span>
+          </span>
+        ))}
+      </span>
+    </div>
   )
 }
 
@@ -296,83 +250,39 @@ export default function Landing() {
   const { theme, toggleTheme } = useTheme()
   const { user } = useStore()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [activeFeature, setActiveFeature] = useState(0)
   const [billing, setBilling] = useState('monthly')
+  const [showCalculator, setShowCalculator] = useState(false)
 
-  const handleStartClick = () => {
-    if (user && user.email) {
-      router.push('/auth/login')
-    } else {
-      router.push('/auth/register')
-    }
-  }
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveFeature((prev) => (prev + 1) % features.length)
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [])
+  const handleStart = () => user ? router.push('/dashboard') : router.push('/auth/register')
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0f] overflow-x-hidden">
-
-      {/* Animated Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet-500/20 rounded-full blur-[120px] animate-pulse"></div>
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-500/15 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }}></div>
-      </div>
-
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-[#0a0a0f]/80 border-b border-gray-200/10 dark:border-gray-800/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-              <Zap className="w-6 h-6 text-white" />
+    <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0f] overflow-x-hidden font-sans">
+      <CountdownBanner />
+      {/* Sticky Nav */}
+      <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/80 dark:bg-[#0a0a0f]/90 border-b border-gray-200/10 dark:border-gray-800/30">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+              <Zap className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white">LeadFlow IA</span>
+            <span className="text-lg font-bold text-gray-900 dark:text-white hidden sm:block">LeadFlow IA</span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-4">
-            <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+          <div className="hidden md:flex items-center gap-3">
+            <button onClick={toggleTheme} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
-            {user && user.email ? (
-              <>
-                <Link href="/dashboard" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
-                  Dashboard
-                </Link>
-                <Link href="/dashboard/leads" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
-                  Mes Leads
-                </Link>
-                <Link href="/dashboard/contacts" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
-                  Contacts
-                </Link>
-                <Link href="/dashboard/settings" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
-                  Paramètres
-                </Link>
-                <a href="mailto:lucas.legrand567@gmail.com" className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
-                  <Headphones className="w-4 h-4" />
-                  Support
-                </a>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-100 dark:bg-violet-900/30">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
-                    {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
-                  </div>
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">{user.name || user.email.split('@')[0]}</span>
-                </div>
-              </>
+            {user ? (
+              <Link href="/dashboard" className="px-4 py-2 bg-violet-600 rounded-lg text-white font-medium">
+                Mon Dashboard
+              </Link>
             ) : (
               <>
-                <Link href="/auth/pricing" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
-                  Tarifs
-                </Link>
-                <Link href="/auth/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition">
-                  Connexion
-                </Link>
-                <Link href="/auth/register" className="px-5 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-violet-500/25 transition-all">
+                <Link href="/auth/pricing" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-medium">Tarifs</Link>
+                <Link href="/auth/login" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-medium">Connexion</Link>
+                <button onClick={handleStart} className="px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 rounded-lg font-semibold text-white text-sm shadow-lg shadow-violet-500/25">
                   Essayer gratuit
-                </Link>
+                </button>
               </>
             )}
           </div>
@@ -388,395 +298,351 @@ export default function Landing() {
         {mobileMenuOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 md:hidden">
             <div className="absolute inset-0 bg-black/50" onClick={() => setMobileMenuOpen(false)}></div>
-            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="absolute right-0 top-0 bottom-0 w-80 p-6 bg-white dark:bg-gray-900">
-              <div className="flex justify-between items-center mb-8">
-                <span className="font-bold text-lg">Menu</span>
-                <button onClick={() => setMobileMenuOpen(false)}><X className="w-6 h-6" /></button>
+            <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} className="absolute right-0 top-0 bottom-0 w-72 p-5 bg-white dark:bg-gray-900">
+              <div className="flex justify-between items-center mb-6">
+                <span className="font-bold">Menu</span>
+                <button onClick={() => setMobileMenuOpen(false)}><X className="w-5 h-5" /></button>
               </div>
-              <div className="space-y-4">
-                {user && user.email ? (
-                  <>
-                    <Link href="/dashboard" className="block py-3 font-medium" onClick={() => setMobileMenuOpen(false)}>📊 Dashboard</Link>
-                    <Link href="/dashboard/leads" className="block py-3" onClick={() => setMobileMenuOpen(false)}>🎯 Mes Leads</Link>
-                    <Link href="/dashboard/contacts" className="block py-3" onClick={() => setMobileMenuOpen(false)}>👥 Contacts</Link>
-                    <Link href="/dashboard/settings" className="block py-3" onClick={() => setMobileMenuOpen(false)}>⚙️ Paramètres</Link>
-                    <a href="mailto:lucas.legrand567@gmail.com" className="block py-3 flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>🎧 Support</a>
-                    <div className="py-3 text-violet-600 font-medium">
-                      {user.name || user.email}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/auth/pricing" className="block py-3" onClick={() => setMobileMenuOpen(false)}>Tarifs</Link>
-                    <Link href="/auth/login" className="block py-3" onClick={() => setMobileMenuOpen(false)}>Connexion</Link>
-                    <button onClick={handleStartClick} className="block py-3 text-violet-600 font-medium text-left">
-                      {user && user.email ? 'Se connecter' : 'Essai gratuit'}
-                    </button>
-                  </>
-                )}
+              <div className="space-y-3">
+                <Link href="/auth/pricing" className="block py-2" onClick={() => setMobileMenuOpen(false)}>Tarifs</Link>
+                <Link href="/auth/login" className="block py-2" onClick={() => setMobileMenuOpen(false)}>Connexion</Link>
+                <button onClick={handleStart} className="block w-full py-3 bg-violet-600 text-white rounded-lg font-medium text-center mt-4">
+                  Essayer gratuit
+                </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Hero with Urgency */}
-      <section className="pt-40 pb-24 px-6 relative">
+      {/* Hero */}
+      <section className="pt-28 pb-16 px-4 relative">
         <div className="max-w-5xl mx-auto text-center">
-          {/* Urgency Banner */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 mb-6"
-          >
-            <AlertCircle className="w-5 h-5" />
-            <span className="font-medium">Offre lancement : -20% sur le plan Pro</span>
-            <CountdownTimer />
+          {/* Social Proof Banner */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-600 dark:text-violet-400 text-sm font-medium">
+              <Users className="w-4 h-4" />
+              {socialProof.users.toLocaleString()}+ commerciaux déjà conquis
+            </div>
           </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-6 leading-tight"
-          >
-            Ferme plus de deals<br />
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
+            Fermez plus de deals<br />
             <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">
-              avec l'Intelligence Artificielle
+              avec l'IA qui vend pour vous
             </span>
           </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-2xl mx-auto"
-          >
-            Assistant commercial intelligent qui qualifie vos leads, génère vos emails et répond aux objections. En 30 secondes.
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+            Assistant commercial intelligent: qualification, emails, scripts et objections. Tout ce qu'il faut pour multiplier vos closings par 3.
           </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-          >
-            <button onClick={handleStartClick} className="group px-8 py-4 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-bold text-lg text-white hover:shadow-xl hover:shadow-violet-500/25 transition-all flex items-center justify-center gap-2">
-              {user && user.email ? 'Se connecter' : 'Démarrer gratuitement'}
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex flex-col sm:flex-row gap-3 justify-center mb-8">
+            <button onClick={handleStart} className="px-6 py-3.5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-xl font-semibold text-white shadow-xl shadow-violet-500/25 flex items-center justify-center gap-2">
+              Essayer gratuit <ArrowRight className="w-5 h-5" />
+            </button>
+            <button onClick={() => setShowCalculator(!showCalculator)} className="px-6 py-3.5 rounded-xl font-medium border border-gray-300 dark:border-gray-700 flex items-center justify-center gap-2">
+              <Calculator className="w-5 h-5" /> Calculez mon ROI
             </button>
           </motion.div>
 
-          {/* Trust Badges */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex flex-wrap justify-center gap-6 mt-8"
-          >
-            {trustBadges.map((badge, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm text-gray-500">
-                <badge.icon className="w-5 h-5 text-emerald-500" />
-                {badge.label}
-              </div>
-            ))}
+          {/* Trust badges */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex flex-wrap justify-center gap-4 mb-8">
+            <div className="flex items-center gap-1.5 text-sm text-gray-500">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Sans CB
+            </div>
+            <div className="flex items-center gap-1.5 text-sm text-gray-500">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" /> 5 démos gratuit
+            </div>
+            <div className="flex items-center gap-1.5 text-sm text-gray-500">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" /> 30 jours satisfait
+            </div>
           </motion.div>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mt-4 text-sm text-gray-500"
-          >
-            ✓ Aucune carte bancaire • ✓ 5 démos gratuites • ✓ Accès instantané • <span className="text-emerald-500 font-medium">Garantie satisfait ou remboursé 30 jours</span>
-          </motion.p>
+          {/* ROI Calculator */}
+          {showCalculator && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="max-w-3xl mx-auto mb-8 text-left">
+              <ROICalculator />
+            </motion.div>
+          )}
+
+          {/* Quick stats */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="grid grid-cols-2 md:grid-cols-4 gap-4 py-6 border-t border-b border-gray-200/10 dark:border-gray-800/30">
+            <StatCounter value={socialProof.users} suffix="+" label="Utilisateurs" />
+            <StatCounter value={socialProof.emailsGenerated} suffix="" label="Emails générés" />
+            <StatCounter value={socialProof.dealsWon} suffix="+" label="Deals fermés" />
+            <StatCounter value={98} suffix="%" label="Satisfaction" prefix="" />
+          </motion.div>
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="py-20 px-6 border-y border-gray-200/10 dark:border-gray-800/10">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8">
-          {stats.map((stat, i) => (
-            <StatCounter key={i} {...stat} />
-          ))}
+      {/* Problem/Solution */}
+      <section className="py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className={`p-6 rounded-2xl ${theme === 'dark' ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-100'}`}>
+              <h3 className="text-lg font-bold text-red-600 mb-4 flex items-center gap-2">
+                <AlertCircle className="w-5 h-5" /> La méthode traditionnelle ne marche plus
+              </h3>
+              <ul className="space-y-3 text-gray-600 dark:text-gray-400">
+                <li className="flex items-start gap-2"><X className="w-4 h-4 text-red-500 mt-1" /> Prospecter sur LinkedIn = 3h/jour</li>
+                <li className="flex items-start gap-2"><X className="w-4 h-4 text-red-500 mt-1" /> Emails génériques = 2% taux réponse</li>
+                <li className="flex items-start gap-2"><X className="w-4 h-4 text-red-500 mt-1" /> Scripts obsolètes = closes ratées</li>
+              </ul>
+            </div>
+            <div className={`p-6 rounded-2xl ${theme === 'dark' ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-100'}`}>
+              <h3 className="text-lg font-bold text-emerald-600 mb-4 flex items-center gap-2">
+                <Zap className="w-5 h-5" /> LeadFlow IA multiplie vos résultats
+              </h3>
+              <ul className="space-y-3 text-gray-600 dark:text-gray-400">
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 mt-1" /> Qualification en 30 secondes</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 mt-1" /> Emails personnalisés = 38% réponse</li>
+                <li className="flex items-start gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 mt-1" /> Scripts qui closent = +50% de deals</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
-
-      {/* Lead Magnet Section */}
-      <LeadMagnet />
 
       {/* Features */}
-      <section className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              Tout ce qu'il faut pour <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">fermer plus vite</span>
-            </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              12 modules IA powered by Groq pour automatiser votre prospection B2B
-            </p>
-          </motion.div>
+      <section className="py-16 px-4 bg-gradient-to-b from-transparent to-violet-500/5 dark:to-violet-500/5">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-4">
+            Tout ce qu'il faut pour <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">fermer plus vite</span>
+          </h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-10">12 modules IA powered by Groq pour automatiser votre prospection</p>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {features.map((f, i) => (
-              <FeatureCard key={i} feature={{...f, icon: f.icon}} index={i} />
-            ))}
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mt-12"
-          >
-            <Link href="/auth/register" className="inline-flex items-center gap-2 text-violet-600 font-semibold hover:gap-3 transition-all">
-              Commencer maintenant <ChevronRight className="w-5 h-5" />
-            </Link>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Extended Social Proof */}
-      <section className="py-24 px-6 bg-gradient-to-b from-transparent via-violet-5 to-transparent dark:via-violet-500/5">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              Ils ont transformé leur <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">prospection</span>
-            </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
-              Rejoignez les commerciaux qui utilisent LeadFlow chaque jour
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.slice(0, 3).map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15 }}
-                className="p-8 rounded-3xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-              >
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                  ))}
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className={`p-5 rounded-2xl ${theme === 'dark' ? 'bg-gray-800/50 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-4`}>
+                  <f.icon className="w-5 h-5 text-white" />
                 </div>
-                <p className="text-lg font-medium text-gray-900 dark:text-white mb-6">"{t.quote}"</p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-semibold text-gray-900 dark:text-white">{t.author}</div>
-                    <div className="text-sm text-gray-500">{t.role} @ {t.company}</div>
-                  </div>
-                  <div className="text-3xl font-bold text-violet-600">{t.result}</div>
-                </div>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{f.title}</h3>
+                <p className="text-sm text-gray-500 mb-3">{f.desc}</p>
+                <div className="text-sm font-medium text-emerald-500">{f.benefit}</div>
               </motion.div>
             ))}
           </div>
 
-          {/* More testimonials */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="mt-8 grid md:grid-cols-2 gap-4"
-          >
-            {testimonials.slice(3).map((t, i) => (
-              <div key={i} className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 flex items-center gap-4">
-                <div className="text-2xl font-bold text-violet-600">{t.result}</div>
-                <div>
-                  <p className="text-gray-900 dark:text-white text-sm">"{t.quote}"</p>
-                  <p className="text-gray-500 text-xs">{t.author} - {t.role}</p>
+          <div className="text-center mt-8">
+            <Link href="/auth/register" className="inline-flex items-center gap-2 text-violet-600 font-semibold">
+              Tester tous les modules <ChevronRight className="w-5 h-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-4">
+            Ils ont <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">triplé leurs ventes</span>
+          </h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-10">Rejoignez {socialProof.users}+ commerciaux qui font la différence</p>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {testimonials.map((t, i) => (
+              <motion.div key={i} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className={`p-5 rounded-2xl ${theme === 'dark' ? 'bg-gray-800/50 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                <div className="flex items-center gap-1 mb-3">
+                  {[...Array(5)].map((_, j) => <Star key={j} className="w-4 h-4 text-yellow-500 fill-yellow-500" />)}
                 </div>
-              </div>
+                <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">"{t.quote}"</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-gray-900 dark:text-white text-sm">{t.author}</div>
+                    <div className="text-xs text-gray-500">{t.role} @ {t.company}</div>
+                  </div>
+                  <div className="text-2xl font-bold text-violet-500">{t.result}</div>
+                </div>
+              </motion.div>
             ))}
-          </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Comparison */}
+      <section className="py-16 px-4 bg-gray-100 dark:bg-gray-800/30">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-10">
+            Pourquoi LeadFlow IA est <span className="text-violet-500">n°1</span> ?
+          </h2>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-300 dark:border-gray-700">
+                  <th className="text-left py-3 px-4 text-gray-500 font-medium">Fonctionnalité</th>
+                  <th className="py-3 px-4 text-center font-bold text-violet-500">LeadFlow IA</th>
+                  <th className="py-3 px-4 text-center text-gray-500">Autres outils</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparison.map((row, i) => (
+                  <tr key={i} className="border-b border-gray-200 dark:border-gray-700/50">
+                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{row.feature}</td>
+                    <td className="py-3 px-4 text-center">
+                      {typeof row.leadflow === 'boolean' ? (
+                        row.leadflow ? <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" /> : <X className="w-5 h-5 text-red-500 mx-auto" />
+                      ) : <span className="font-medium text-emerald-500">{row.leadflow}</span>}
+                    </td>
+                    <td className="py-3 px-4 text-center text-gray-500">{row.others}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
       {/* Pricing */}
-      <section className="py-24 px-6" id="pricing">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-8"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-              Des tarifs <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">simples</span>
-            </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
-              Commencez gratuitement. Évoluez selon vos besoins.
-            </p>
-          </motion.div>
+      <section className="py-16 px-4" id="pricing">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 dark:text-white mb-4">
+            Des tarifs <span className="bg-gradient-to-r from-violet-500 to-purple-600 bg-clip-text text-transparent">simples</span>
+          </h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-8">Sans engagement, résiliation anytime</p>
 
-          {/* Billing Toggle */}
+          {/* Billing */}
           <div className="flex justify-center mb-8">
-            <div className={`inline-flex items-center gap-4 p-2 rounded-xl ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
-              <button
-                onClick={() => setBilling('monthly')}
-                className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                  billing === 'monthly'
-                    ? 'bg-violet-600 text-white'
-                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                Mensuel
-              </button>
-              <button
-                onClick={() => setBilling('yearly')}
-                className={`px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
-                  billing === 'yearly'
-                    ? 'bg-violet-600 text-white'
-                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
-                }`}
-              >
-                Annuel
-                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
-                  -20%
-                </span>
+            <div className={`inline-flex items-center gap-1 p-1 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-100'}`}>
+              <button onClick={() => setBilling('monthly')} className={`px-4 py-2 rounded-md text-sm font-medium transition ${billing === 'monthly' ? 'bg-violet-600 text-white' : 'text-gray-500'}`}>Mensuel</button>
+              <button onClick={() => setBilling('yearly')} className={`px-4 py-2 rounded-md text-sm font-medium transition flex items-center gap-1 ${billing === 'yearly' ? 'bg-violet-600 text-white' : 'text-gray-500'}`}>
+                Annuel <span className="text-xs px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">-20%</span>
               </button>
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-4">
             {plans.map((plan, i) => (
-              <motion.div
-                key={plan.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`relative p-8 rounded-3xl ${plan.popular ? 'bg-gradient-to-b from-violet-600 to-purple-600 text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}`}
-              >
-                {(plan.popular || billing === 'yearly') && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-white text-violet-600 text-xs font-bold rounded-full">
-                    {plan.popular ? '⭐ -20% CE MOIS' : '🔥 -20%'}
+              <motion.div key={plan.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className={`relative p-6 rounded-2xl ${plan.highlight ? 'bg-gradient-to-b from-violet-600 to-purple-600 text-white' : theme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-white text-violet-600 text-xs font-bold rounded-full">
+                    Meilleure vente
                   </div>
                 )}
-                <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{plan.name}</h3>
-                <p className={`text-sm mb-6 ${plan.popular ? 'text-violet-100' : 'text-gray-500'}`}>
-                  {plan.id === 'free' ? 'Pour découvrir' : 'Pour les pros'}
-                </p>
-                <div className="mb-6">
-                  <span className={`text-5xl font-bold ${plan.popular ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                <h3 className={`text-lg font-bold ${plan.highlight ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{plan.name}</h3>
+                <p className={`text-sm mb-4 ${plan.highlight ? 'text-violet-200' : 'text-gray-500'}`}>{plan.desc}</p>
+                <div className="mb-4">
+                  <span className={`text-4xl font-bold ${plan.highlight ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
                     {billing === 'yearly' && plan.priceYearly ? plan.priceYearly : plan.price}€
                   </span>
-                  <span className={plan.popular ? 'text-violet-200' : 'text-gray-500'}>
-                    {plan.period}
-                  </span>
-                  {billing === 'yearly' && plan.priceYearly && (
-                    <div className={`text-sm mt-1 ${plan.popular ? 'text-violet-200' : 'text-emerald-500'}`}>
-                      Économisez {Math.round((plan.price - plan.priceYearly) * 12)}€/an
-                    </div>
+                  <span className={plan.highlight ? 'text-violet-200' : 'text-gray-500'}>{plan.period}</span>
+                  {billing === 'yearly' && plan.savings > 0 && (
+                    <div className="text-emerald-400 text-sm">Économisez {plan.savings}€/an</div>
                   )}
                 </div>
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-2 mb-6">
                   {plan.features.map((f, j) => (
-                    <li key={j} className="flex items-center gap-3">
-                      <Check className={`w-5 h-5 ${plan.popular ? 'text-white' : 'text-emerald-500'}`} />
-                      <span className={plan.popular ? 'text-violet-100' : 'text-gray-600 dark:text-gray-300'}>{f}</span>
+                    <li key={j} className={`flex items-center gap-2 text-sm ${plan.highlight ? 'text-violet-100' : 'text-gray-600 dark:text-gray-400'}`}>
+                      <CheckCircle2 className={`w-4 h-4 ${plan.highlight ? 'text-white' : 'text-emerald-500'}`} /> {f}
                     </li>
                   ))}
                 </ul>
-                <Link href="/auth/register" className={`block text-center py-4 rounded-xl font-semibold transition ${
-                  plan.popular 
-                    ? 'bg-white text-violet-600 hover:bg-violet-50' 
-                    : 'bg-gradient-to-r from-violet-600 to-purple-600 text-white hover:shadow-lg'
-                }`}>
-                  {plan.id === 'free' ? 'Commencer gratuit' : 'Choisir ' + plan.name}
+                <Link href="/auth/register" className={`block text-center py-3 rounded-xl font-medium ${plan.highlight ? 'bg-white text-violet-600 hover:bg-violet-50' : 'bg-violet-600 text-white hover:bg-violet-700'}`}>
+                  {plan.cta}
                 </Link>
               </motion.div>
             ))}
           </div>
 
-          {/* Money Back Guarantee */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mt-8"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 text-emerald-600 text-sm">
-              <Shield className="w-4 h-4" />
-              Garantie satisfait ou remboursé 30 jours - Pas de risque
-            </div>
-          </motion.div>
+          {/* Guarantees */}
+          <div className="flex flex-wrap justify-center gap-6 mt-8">
+            {guarantees.map((g, i) => (
+              <div key={i} className="flex items-center gap-2 text-sm text-gray-500">
+                <g.icon className="w-5 h-5 text-emerald-500" />
+                <span>{g.title}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="py-24 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="p-16 rounded-3xl bg-gradient-to-br from-violet-600 to-purple-600 relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtOS45NDEgMC0xOCA4LjA1OS0xOCAxOHM4LjA1OSAxOCAxOCAxOCAxOC04LjA1OSAxOC0xOC04LjA1OS0xOC0xOHoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjAyIi8+PC9nPjwvc3ZnPg==')] opacity-30"></div>
-            <div className="relative">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                Prêt à transformer votre prospection ?
-              </h2>
-              <p className="text-xl text-violet-100 mb-8 max-w-xl mx-auto">
-                Rejoignez 500+ commerciaux qui génèrent plus de leads avec LeadFlow
-              </p>
-              <Link href="/auth/register" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-violet-600 rounded-xl font-bold text-lg hover:shadow-xl transition-all">
-                Commencer gratuitement
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </div>
-          </motion.div>
+      <section className="py-20 px-4">
+        <div className="max-w-3xl mx-auto text-center p-10 rounded-3xl bg-gradient-to-br from-violet-600 to-purple-600 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtOS45NDEgMC0xOCA4LjA1OS0xOCAxOHM4LjA1OSAxOCAxOCAxOCAxOC04LjA1OSAxOC0xOC04LjA1OS0xOC0xOHoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjAyIi8+PC9nPjwvc3ZnPg==')] opacity-30"></div>
+          <div className="relative">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Prêt à transformer votre prospection ?
+            </h2>
+            <p className="text-violet-100 mb-6 text-lg">
+              Rejoignez {socialProof.users}+ commerciaux qui génèrent plus de deals
+            </p>
+            <button onClick={handleStart} className="inline-flex items-center gap-2 px-8 py-4 bg-white text-violet-600 rounded-xl font-bold text-lg hover:shadow-xl">
+              Essayer gratuitement <ArrowRight className="w-5 h-5" />
+            </button>
+            <p className="mt-4 text-violet-200 text-sm">Aucune carte bancaire requise</p>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-6 border-t border-gray-200 dark:border-gray-800">
+      <footer className="py-12 px-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#060608]">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-12">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                  <Zap className="w-6 h-6 text-white" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+            <div className="col-span-2 md:col-span-1">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">LeadFlow IA</span>
+                <span className="font-extrabold text-white">LeadFlow <span className="text-violet-400">IA</span></span>
               </div>
-              <p className="text-gray-500 text-sm">Assistant commercial intelligent pour les pros du B2B.</p>
+              <p className="text-sm text-gray-500 leading-relaxed mb-4">
+                L'outil IA préféré des commerciaux B2B pour closer plus de deals.
+              </p>
+              <div className="flex gap-3">
+                <a href="#" className="text-xs text-gray-600 hover:text-gray-300 transition-colors">Twitter</a>
+                <a href="#" className="text-xs text-gray-600 hover:text-gray-300 transition-colors">LinkedIn</a>
+              </div>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Produit</h4>
-              <ul className="space-y-2 text-sm text-gray-500">
-                <li><Link href="/auth/pricing" className="hover:text-violet-600">Tarifs</Link></li>
-                <li><Link href="/dashboard" className="hover:text-violet-600">Dashboard</Link></li>
-              </ul>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Produit</p>
+              <div className="space-y-2.5">
+                <a href="#features" className="block text-sm text-gray-500 hover:text-gray-300 transition-colors">Fonctionnalités</a>
+                <Link href="/auth/pricing" className="block text-sm text-gray-500 hover:text-gray-300 transition-colors">Tarifs</Link>
+                <a href="#" className="block text-sm text-gray-500 hover:text-gray-300 transition-colors">Changelog</a>
+              </div>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Légal</h4>
-              <ul className="space-y-2 text-sm text-gray-500">
-                <li><Link href="/legal/privacy" className="hover:text-violet-600">Confidentialité</Link></li>
-                <li><Link href="/legal/terms" className="hover:text-violet-600">CGV</Link></li>
-              </ul>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Support</p>
+              <div className="space-y-2.5">
+                <a href="#" className="block text-sm text-gray-500 hover:text-gray-300 transition-colors">Documentation</a>
+                <a href="#faq" className="block text-sm text-gray-500 hover:text-gray-300 transition-colors">FAQ</a>
+                <a href="mailto:contact@leadflow.io" className="block text-sm text-gray-500 hover:text-gray-300 transition-colors">Contact</a>
+              </div>
             </div>
             <div>
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Contact</h4>
-              <p className="text-sm text-gray-500">lucas.legrand567@gmail.com</p>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Légal</p>
+              <div className="space-y-2.5">
+                <Link href="/legal/privacy" className="block text-sm text-gray-500 hover:text-gray-300 transition-colors">Confidentialité</Link>
+                <Link href="/legal/terms" className="block text-sm text-gray-500 hover:text-gray-300 transition-colors">CGV</Link>
+                <Link href="/legal/mentions" className="block text-sm text-gray-500 hover:text-gray-300 transition-colors">Mentions légales</Link>
+              </div>
             </div>
           </div>
-          <div className="text-center pt-8 border-t border-gray-200 dark:border-gray-800">
-            <p className="text-sm text-gray-500">© 2026 LeadFlow IA. Tous droits réservés.</p>
+          <div className="pt-6 border-t border-gray-200 dark:border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-2 text-xs text-gray-600">
+              <span>&copy; {new Date().getFullYear()} LeadFlow IA Pro. Tous droits réservés.</span>
+              <span className="hidden sm:block">|</span>
+              <span>Conçu en France</span>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-gray-600">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Systèmes opérationnels
+              </span>
+              <span>Hébergé sur Vercel</span>
+            </div>
+          </div>
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-800">
+            <p className="text-xs text-gray-600 leading-relaxed">
+              <strong className="text-gray-500">Mentions légales :</strong> LeadFlow IA Pro est un service SaaS édité par LeadFlow IA, France.
+              Hébergeur : Vercel Inc., 340 Pine Street Suite 701, San Francisco, CA 94104, USA.
+              Contact : <a href="mailto:contact@leadflow.io" className="text-gray-500 hover:text-gray-300">contact@leadflow.io</a>.
+              Conformément au RGPD, vous disposez d'un droit d'accès, de rectification et de suppression de vos données personnelles.
+              Les paiements sont traités par Stripe Inc.
+            </p>
           </div>
         </div>
       </footer>
