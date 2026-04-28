@@ -1,17 +1,15 @@
 "use client"
+export const dynamic = 'force-dynamic';
 
-import { useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, Suspense } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { CheckCircle2, ArrowRight, Home } from 'lucide-react'
 
-export default function PaymentSuccess() {
+function PaymentSuccessContent() {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
   useEffect(() => {
-    // Here you would verify the session with Stripe API
-    // For demo, we'll just redirect after showing success
     const timer = setTimeout(() => {
       router.push('/dashboard')
     }, 5000)
@@ -19,49 +17,34 @@ export default function PaymentSuccess() {
   }, [router])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 p-6">
+    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
       <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: 'spring', stiffness: 200 }}
-        className="text-center"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="text-center max-w-md mx-auto p-8"
       >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="w-24 h-24 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center mx-auto mb-8"
-        >
-          <CheckCircle2 className="w-12 h-12 text-emerald-400" />
-        </motion.div>
-
-        <h1 className="text-4xl font-bold text-white mb-4">
-          Paiement réussi ! 🎉
-        </h1>
-        
-        <p className="text-xl text-emerald-200 mb-8">
-          Bienvenue dans LeadFlow IA Pro !
-        </p>
-
-        <div className="space-y-3 mb-8">
-          <p className="text-emerald-100/80">✨ Accès à tous les modules IA</p>
-          <p className="text-emerald-100/80">🚀 200 requêtes par mois</p>
-          <p className="text-emerald-100/80">💼 CRM complet</p>
+        <div className="w-20 h-20 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 className="w-10 h-10 text-emerald-400" />
         </div>
-
+        <h1 className="text-3xl font-bold text-white mb-4">Paiement réussi!</h1>
+        <p className="text-gray-400 mb-8">Votre abonnement a été activé. Redirection...</p>
         <button
           onClick={() => router.push('/dashboard')}
-          className="px-8 py-4 bg-white text-emerald-900 rounded-xl font-bold flex items-center gap-2 mx-auto hover:scale-105 transition-transform"
+          className="px-8 py-3 rounded-xl bg-violet-600 text-white font-medium flex items-center gap-2 mx-auto"
         >
-          <Home className="w-5 h-5" />
-          Aller au Dashboard
-          <ArrowRight className="w-5 h-5" />
+          Accéder au dashboard <ArrowRight className="w-5 h-5" />
         </button>
-
-        <p className="text-emerald-200/50 text-sm mt-6">
-          Redirection automatique dans 5 secondes...
-        </p>
       </motion.div>
     </div>
+  )
+}
+
+export default function PaymentSuccess() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+    </div>}>
+      <PaymentSuccessContent />
+    </Suspense>
   )
 }

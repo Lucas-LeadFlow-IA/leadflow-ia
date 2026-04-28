@@ -1,0 +1,74 @@
+﻿
+> leadflow-ia-pro@4.0.0 build
+> next build
+
+  Ôû▓ Next.js 14.2.5
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+node.exe : Failed to compile.
+Au caractère Ligne:1 : 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Failed to compile.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./lib/store.js
+Error: 
+  [31mx[0m Expected ',', got 'export'
+     ,-[[36;1;4mC:\Users\micka\OneDrive\Bureau\LeadFlow_IA_Final\lib\store.js[0m:117:1]
+ [2m117[0m |   }),
+ [2m118[0m | })
+ [2m119[0m | 
+ [2m120[0m | export default useStore
+     : [31;1m^^^^^^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/store.js
+./app/dashboard/contacts/page.js
+
+./app/page.js
+Error: 
+  [31mx[0m Expected corresponding JSX closing tag for <div>
+     ,-[[36;1;4mC:\Users\micka\OneDrive\Bureau\LeadFlow_IA_Final\app\page.js[0m:106:1]
+ [2m106[0m |               </div>
+ [2m107[0m |             ))}
+ [2m108[0m |           </div>
+ [2m109[0m |         </section>
+     : [31;1m        ^^^^^^^^^^[0m
+ [2m110[0m | 
+ [2m111[0m |         {/* Testimonials */}
+ [2m112[0m |         <section className="py-16 px-4">
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/page.js
+
+./lib/store.js
+Error: 
+  [31mx[0m Expected ',', got 'export'
+     ,-[[36;1;4mC:\Users\micka\OneDrive\Bureau\LeadFlow_IA_Final\lib\store.js[0m:117:1]
+ [2m117[0m |   }),
+ [2m118[0m | })
+ [2m119[0m | 
+ [2m120[0m | export default useStore
+     : [31;1m^^^^^^[0m
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./lib/store.js
+./app/layout.js
+
+
+> Build failed because of webpack errors
