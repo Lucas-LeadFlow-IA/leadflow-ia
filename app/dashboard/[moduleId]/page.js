@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { 
-  ArrowLeft, Sparkles, Send, Loader2, AlertCircle, Copy,
+  ArrowLeft, Sparkles, Send, Loader2, AlertCircle, Copy
 } from 'lucide-react'
 import { getAllModules } from '@/lib/modules'
 
