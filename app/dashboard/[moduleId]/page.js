@@ -6,10 +6,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { 
-  ArrowLeft, Sparkles, Send, Loader2, CheckCircle,
-  AlertCircle, Copy, Download, Star
+  ArrowLeft, Sparkles, Send, Loader2, AlertCircle, Copy,
 } from 'lucide-react'
-import { MODULES, getAllModules } from '@/lib/modules'
+import { getAllModules } from '@/lib/modules'
 
 export default function ModulePage({ params }) {
   const { moduleId } = params
@@ -20,7 +19,6 @@ export default function ModulePage({ params }) {
   const [result, setResult] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -36,7 +34,6 @@ export default function ModulePage({ params }) {
     }
     setModule(found)
 
-    // Initialize form data
     const initData = {}
     found.fields?.forEach(f => {
       initData[f.name] = ''
@@ -86,7 +83,11 @@ export default function ModulePage({ params }) {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
-      <header className="border-b border-gray-800 bg-[#12121a]/50 backdrop-blur-xl">
+      <motion.header
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="border-b border-gray-800 bg-[#12121a]/50 backdrop-blur-xl"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
@@ -104,13 +105,17 @@ export default function ModulePage({ params }) {
             </div>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isLocked ? (
-          <div className="max-w-md mx-auto text-center py-20">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-md mx-auto text-center py-20"
+          >
             <div className="w-20 h-20 rounded-full bg-violet-500/20 flex items-center justify-center mx-auto mb-6">
-              <Star className="w-10 h-10 text-violet-400" />
+              <Sparkles className="w-10 h-10 text-violet-400" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-4">Module Premium</h2>
             <p className="text-gray-400 mb-8">
@@ -122,15 +127,15 @@ export default function ModulePage({ params }) {
             >
               Passer au Pro <ArrowLeft className="w-4 h-4 rotate-180" />
             </Link>
-          </div>
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+          >
             {/* Form */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="p-6 rounded-2xl bg-gray-900/50 border border-gray-800"
-            >
+            <div className="p-6 rounded-2xl bg-gray-900/50 border border-gray-800">
               <h2 className="text-xl font-semibold text-white mb-6">{module.name}</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 {module.fields?.map((field) => (
@@ -197,25 +202,19 @@ export default function ModulePage({ params }) {
                   </p>
                 )}
               </form>
-            </motion.div>
+            </div>
 
             {/* Result */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="p-6 rounded-2xl bg-gray-900/50 border border-gray-800"
-            >
+            <div className="p-6 rounded-2xl bg-gray-900/50 border border-gray-800">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-white">Résultat</h2>
                 {result && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={copyToClipboard}
-                      className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <button
+                    onClick={copyToClipboard}
+                    className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
                 )}
               </div>
 
@@ -240,8 +239,8 @@ export default function ModulePage({ params }) {
                   </pre>
                 </div>
               )}
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         )}
       </main>
     </div>

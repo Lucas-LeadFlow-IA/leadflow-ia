@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { 
   Sparkles, Zap, TrendingUp, Crown, CreditCard,
-  LogOut, Lock, CheckCircle, ArrowRight
+  LogOut, Lock, CheckCircle, ArrowRight, Star
 } from 'lucide-react'
 
 const modules = [
