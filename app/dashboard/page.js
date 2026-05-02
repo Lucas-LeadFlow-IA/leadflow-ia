@@ -43,6 +43,7 @@ export default function DashboardPage() {
               </div>
               <span className="text-xl font-bold text-white">LeadFlow IA</span>
             </div>
+
             <div className="flex items-center gap-4">
               <span className="text-sm text-gray-300">{user.credits || 10} crédits</span>
               <button onClick={() => logout()} className="text-gray-400 hover:text-white">
@@ -65,7 +66,7 @@ export default function DashboardPage() {
               <div
                 key={module.id}
                 onClick={() => router.push(`/dashboard/${module.id}`)}
-                className={`p-6 rounded-2xl bg-gray-900/50 border cursor-pointer transition-all ${
+                className={`p-6 rounded-2xl bg-gray-900/50 border transition-all cursor-pointer ${
                   isLocked ? 'border-gray-800 opacity-60' : 'border-gray-800 hover:border-violet-500'
                 }`}
               >
