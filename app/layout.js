@@ -1,5 +1,6 @@
 import './globals.css'
 import { ThemeProvider } from '@/lib/theme-provider'
+import { AuthProvider } from '@/lib/auth-context'
 import { Toaster } from 'react-hot-toast'
 
 export const viewport = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no'
@@ -7,7 +8,7 @@ export const viewport = 'width=device-width, initial-scale=1, maximum-scale=1, u
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://leadflow.io'),
   title: 'LeadFlow IA Pro - Closez 3x plus de deals avec l\'IA',
-  description: 'Qualification BANT, emails percutants, scripts d\'appel et closing IA en 30 secondes. L\'outil de sales automation préféré des commerciaux B2B.',
+  description: 'Qualification BANT, emails percutants, scripts d\'appel et closing IA en 30 secondes. L\'outil de sales automation prǸfǸrǸ des commerciaux B2B.',
   keywords: 'sales automation, IA commerciale, qualification leads, BANT, cold email, CRM, prospection B2B, commercial B2B',
   openGraph: {
     title: 'LeadFlow IA Pro',
@@ -38,7 +39,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="fr" suppressHydrationWarning>
       <body>
-        <ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider>
             <Toaster 
               position="top-right"
               toastOptions={{
@@ -64,7 +66,8 @@ export default function RootLayout({ children }) {
               }}
             />
             {children}
-        </ThemeProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   )

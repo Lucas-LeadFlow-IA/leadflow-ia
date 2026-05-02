@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 import { motion } from 'framer-motion'
 import { Mail, Lock, User, Building, Sparkles, ArrowRight, Eye, EyeOff } from 'lucide-react'
 
 export default function RegisterPage() {
   const router = useRouter()
+  const { register } = useAuth()
   const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -27,12 +29,14 @@ export default function RegisterPage() {
     }
 
     setLoading(true)
-    // Simulation d'inscription
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const result = await register(formData.email, formData.password, formData.name)
     setLoading(false)
-    
-    // Redirection vers onboarding
-    router.push('/onboarding')
+
+    if (result.success) {
+      router.push('/onboarding')
+    } else {
+      setError(result.error)
+    }
   }
 
   const handleChange = (e) => {

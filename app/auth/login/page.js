@@ -2,11 +2,13 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 import { motion } from 'framer-motion'
-import { Mail, Lock, LogIn, ArrowRight, Sparkles, Eye, EyeOff } from 'lucide-react'
+import { Mail, Lock, LogIn, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -18,12 +20,14 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     
-    // Simulation de connexion
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const result = await login(email, password)
     setLoading(false)
-    
-    // Redirection vers dashboard
-    router.push('/dashboard')
+
+    if (result.success) {
+      router.push('/dashboard')
+    } else {
+      setError(result.error)
+    }
   }
 
   return (
@@ -104,7 +108,7 @@ export default function LoginPage() {
 
         <p className="text-center mt-6 text-gray-400">
           Pas de compte ?{' '}
-          <button onClick={() => router.push('/auth/register')} className="text-violet-400 hover:text-violet-300 font-medium">
+          <button onClick={() => router.push('/auth/register')} className="text-emerald-400 hover:text-emerald-300 font-medium">
             Créer un compte
           </button>
         </p>
