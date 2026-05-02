@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
@@ -11,18 +11,18 @@ import {
 } from 'lucide-react'
 
 const modules = [
-  { id: 'bant', icon: '🎯', title: 'Qualification BANT', desc: 'Qualifiez vos leads en 30s', free: true },
-  { id: 'email', icon: '✉️', title: 'Cold Emails IA', desc: 'Emails percutants personnalisés', free: true },
-  { id: 'call-script', icon: '📞', title: 'Scripts d\'Appel', desc: 'Scripts de vente irrésistibles', free: false },
-  { id: 'closing', icon: '🤝', title: 'Closing IA', desc: 'Techniques de closing avancées', free: false },
-  { id: 'needs', icon: '📊', title: 'Analyse de Besoins', desc: 'Comprenez vos prospects', free: false },
-  { id: 'offer', icon: '🎨', title: 'Générateur d\'Offres', desc: 'Offres irrésistibles en 1 clic', free: false },
-  { id: 'objection', icon: '⚡', title: 'Objections Handler', desc: 'Véritable arsenal anti-objections', free: false },
-  { id: 'followup', icon: '📧', title: 'Follow-up Sequences', desc: 'Séquences d\'emails automatiques', free: false },
-  { id: 'scoring', icon: '🔍', title: 'Lead Scoring', desc: 'Priorisez vos meilleurs leads', free: false },
-  { id: 'pipeline', icon: '📈', title: 'Pipeline Predictor', desc: 'Prédisez vos ventes futures', free: false },
-  { id: 'call-analyzer', icon: '🎙️', title: 'Call Analyzer', desc: 'Analysez vos appels en temps réel', free: false },
-  { id: 'winloss', icon: '🏆', title: 'Win-Loss Analyzer', desc: 'Comprenez pourquoi vous gagnez/perdez', free: false },
+  { id: 'bant', icon: 'ðŸŽ¯', title: 'Qualification BANT', desc: 'Qualifiez vos leads en 30s', free: true },
+  { id: 'email', icon: 'âœ‰ï¸', title: 'Cold Emails IA', desc: 'Emails percutants personnalisÃ©s', free: true },
+  { id: 'call-script', icon: 'ðŸ“ž', title: 'Scripts d\'Appel', desc: 'Scripts de vente irrÃ©sistibles', free: false },
+  { id: 'closing', icon: 'ðŸ¤', title: 'Closing IA', desc: 'Techniques de closing avancÃ©es', free: false },
+  { id: 'needs', icon: 'ðŸ“Š', title: 'Analyse de Besoins', desc: 'Comprenez vos prospects', free: false },
+  { id: 'offer', icon: 'ðŸŽ¨', title: 'GÃ©nÃ©rateur d\'Offres', desc: 'Offres irrÃ©sistibles en 1 clic', free: false },
+  { id: 'objection', icon: 'âš¡', title: 'Objections Handler', desc: 'VÃ©ritable arsenal anti-objections', free: false },
+  { id: 'followup', icon: 'ðŸ“§', title: 'Follow-up Sequences', desc: 'SÃ©quences d\'emails automatiques', free: false },
+  { id: 'scoring', icon: 'ðŸ”', title: 'Lead Scoring', desc: 'Priorisez vos meilleurs leads', free: false },
+  { id: 'pipeline', icon: 'ðŸ“ˆ', title: 'Pipeline Predictor', desc: 'PrÃ©disez vos ventes futures', free: false },
+  { id: 'call-analyzer', icon: 'ðŸŽ™ï¸', title: 'Call Analyzer', desc: 'Analysez vos appels en temps rÃ©el', free: false },
+  { id: 'winloss', icon: 'ðŸ†', title: 'Win-Loss Analyzer', desc: 'Comprenez pourquoi vous gagnez/perdez', free: false },
 ]
 
 export default function DashboardPage() {
@@ -64,14 +64,14 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4">
               <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800/50 border border-gray-700">
                 <CreditCard className="w-4 h-4 text-violet-400" />
-                <span className="text-sm text-gray-300">{user.credits || 10} crédits</span>
+                <span className="text-sm text-gray-300">{user.credits || 10} crÃ©dits</span>
               </div>
               <button
                 onClick={() => logout()}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-gray-800 transition-all"
               >
                 <LogOut className="w-4 h-4" />
-                <span className="hidden md:inline">Déconnexion</span>
+                <span className="hidden md:inline">DÃ©connexion</span>
               </button>
             </div>
           </div>
@@ -87,10 +87,10 @@ export default function DashboardPage() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-white mb-2">
-            Bonjour, {user.name || 'Utilisateur'} 👋
+            Bonjour, {user.name || 'Utilisateur'} ðŸ‘‹
           </h1>
           <p className="text-gray-400">
-            Vous avez <span className="text-violet-400 font-semibold">{user.credits || 10} crédits</span> restants.
+            Vous avez <span className="text-violet-400 font-semibold">{user.credits || 10} crÃ©dits</span> restants.
             {user.plan !== 'free' && (
               <span className="ml-2 px-2 py-1 rounded-lg bg-violet-500/10 text-violet-400 text-xs font-medium">
                 Plan {user.plan}
@@ -107,7 +107,7 @@ export default function DashboardPage() {
           className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
         >
           {[
-            { icon: Zap, label: 'Crédits utilisés', value: '0', color: 'from-violet-500 to-purple-500' },
+            { icon: Zap, label: 'CrÃ©dits utilisÃ©s', value: '0', color: 'from-violet-500 to-purple-500' },
             { icon: TrendingUp, label: 'Conversions', value: '0%', color: 'from-emerald-500 to-teal-500' },
             { icon: Crown, label: 'Plan actuel', value: user.plan || 'Free', color: 'from-orange-500 to-red-500' },
           ].map((stat, i) => (
