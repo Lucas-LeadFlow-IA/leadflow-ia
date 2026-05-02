@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import useStore from '@/lib/store'
+import { useStore } from '@/lib/store'
 import { getAllModules } from '@/lib/modules'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
