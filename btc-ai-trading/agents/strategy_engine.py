@@ -35,6 +35,7 @@ class StrategyEngine(BaseAgent):
         self.force_strategy = force_strategy
         self.ignore_regime = ignore_regime
         self.active_strategy: StrategyName = StrategyName.NONE
+        self.last_candidates: list[TradeSetup] = []
 
     def decide(self, snap: MarketSnapshot, technical: AgentReport, liquidity: AgentReport,
                regime_report: AgentReport) -> tuple[TradeSetup | None, AgentReport]:
@@ -79,6 +80,7 @@ class StrategyEngine(BaseAgent):
                 candidates.append(setup)
             rationale = ""
 
+        self.last_candidates = candidates
         valid = [c for c in candidates if c.score >= threshold]
         chosen: TradeSetup | None = None
         if valid:

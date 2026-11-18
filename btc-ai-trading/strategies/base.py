@@ -50,6 +50,7 @@ class Strategy(ABC):
     breakeven_r: float | None = 1.0
     trail_start_r: float | None = 1.5
     trail_atr: float = 1.5
+    use_choch_invalidation: bool = True
 
     @property
     def timeframes(self) -> tuple[str, str, str]:
@@ -127,6 +128,8 @@ class Strategy(ABC):
 
     def invalidated(self, pos: ManagedPosition, snap: MarketSnapshot) -> str | None:
         """Default invalidation: change of character against the position on the entry TF."""
+        if not self.use_choch_invalidation:
+            return None
         tf = self.entry_tf
         if pos.direction == Direction.LONG and snap.get(tf, "choch_bear") == 1:
             return f"invalidation: bearish CHOCH on {tf}"
