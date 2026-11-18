@@ -1,0 +1,40 @@
+# Usage:
+#   cp .env.example .env        # then edit (PAPER by default)
+#   docker compose up -d --build
+#   open http://127.0.0.1:8000  (token: DASHBOARD_TOKEN or ./runtime/dashboard_token.txt)
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: btc_trading
+      POSTGRES_USER: btc
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U btc -d btc_trading"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  app:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://btc:${POSTGRES_PASSWORD:-change-me-postgres}@postgres:5432/btc_trading
+      API_HOST: 0.0.0.0
+    ports:
+      - "127.0.0.1:8000:8000"   # dashboard bound to localhost only
+    volumes:
+      - ./data:/app/data
+      - ./runtime:/app/runtime   # kill switch, risk state, paper account (persist across restarts)
+      - ./models:/app/models
+      - ./reports:/app/reports
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

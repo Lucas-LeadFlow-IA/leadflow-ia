@@ -213,8 +213,9 @@ def create_app(system: TradingSystem | None, settings: Settings, token: str) -> 
     if WEB_OUT.exists():
         @app.get("/{path:path}", include_in_schema=False)
         def static(path: str):
+            root = WEB_OUT.resolve()
             target = (WEB_OUT / path).resolve()
-            if not str(target).startswith(str(WEB_OUT.resolve())):
+            if not target.is_relative_to(root):
                 raise HTTPException(404)
             for cand in (target, target.with_suffix(".html"), target / "index.html"):
                 if cand.is_file():
@@ -244,4 +245,4 @@ def resolve_token(settings: Settings) -> tuple[str, Path | None]:
     return tok, p
 
 
-__all__ = ["create_app", "resolve_token", "Path"]
+__all__ = ["create_app", "resolve_token"]

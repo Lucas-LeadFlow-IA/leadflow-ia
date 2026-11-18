@@ -1,0 +1,14 @@
+.venv
+**/__pycache__
+.pytest_cache
+.env
+.env.*
+!.env.example
+data/*
+runtime/*
+models/*
+reports/*
+dashboard/web/node_modules
+dashboard/web/.next
+dashboard/web/out
+*.log

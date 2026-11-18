@@ -154,3 +154,13 @@ def test_database_roundtrip(tmp_path):
     assert db.trades("paper")[0].net_pnl == pytest.approx(0.009)
     assert db.events("paper")[0]["message"] == "msg"
     assert db.equity_curve("paper")[0]["equity"] == 1000
+
+
+def test_static_dashboard_blocks_path_traversal(system):
+    from dashboard.api.app import WEB_OUT
+    if not WEB_OUT.exists():
+        pytest.skip("dashboard not built")
+    client = TestClient(create_app(system, get_settings(), TOKEN))
+    for url in ("/%2e%2e/%2e%2e/%2e%2e/etc/passwd", "/..%2f..%2f..%2fetc%2fpasswd"):
+        r = client.get(url)
+        assert "root:" not in r.text
