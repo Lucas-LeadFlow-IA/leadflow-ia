@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg: #07090d;
+  --surface: #0f141b;
+  --raised: #151c26;
+  --line: #1f2937;
+  --ink: #e8edf3;
+  --muted: #9aa7b8;
+  --faint: #64748b;
+  --accent: #f7931a;   /* bitcoin orange — brand accent, not a data color */
+  --good: #0ca30c;     /* status: good   */
+  --warn: #fab219;     /* status: warning */
+  --bad: #d03b3b;      /* status: critical */
+  --info: #3987e5;
+  /* chart series (validated dark categorical slots 1-4) */
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+}
+
+html, body { background: var(--bg); color: var(--ink); }
+body { font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiased; }
+.num { font-variant-numeric: tabular-nums; }
+@layer components {
+  .card { @apply rounded-2xl border border-line bg-surface shadow-card; }
+  .label { @apply text-[11px] font-medium uppercase tracking-[0.08em] text-muted; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition disabled:opacity-40; }
+  .btn-ghost { @apply btn border border-line bg-raised text-ink hover:border-faint; }
+  .btn-danger { @apply btn bg-bad/90 text-white hover:bg-bad; }
+  .btn-primary { @apply btn bg-accent text-black hover:brightness-110; }
+  .tbl { @apply w-full text-sm; }
+  .tbl th { @apply px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wider text-muted; }
+  .tbl td { @apply border-t border-line px-3 py-2 align-top; }
+}
+
+::-webkit-scrollbar { height: 8px; width: 8px; }
+::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 8px; }
