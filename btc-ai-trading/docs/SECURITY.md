@@ -21,6 +21,8 @@
 HALT (kill switch) si : drawdown ≥ limite · données > 90 s · ≥ 5 coupures WebSocket en 10 min ·
 ≥ 6 échecs REST consécutifs · désynchronisation du compte · ≥ 3 erreurs d'exécution en 10 min ·
 stop-loss impossible à installer · erreur critique d'exécution.
+Exception : pendant les 3 min qui suivent une veille détectée de l'ordinateur, données périmées,
+coupures WebSocket et échecs REST bloquent seulement les entrées (resynchronisation) ; au-delà, HALT.
 Blocage des entrées (sans HALT) si : perte journalière atteinte (jusqu'à 00:00 UTC), données > 30 s,
 WebSocket déconnecté, compte non synchronisé depuis 120 s.
 

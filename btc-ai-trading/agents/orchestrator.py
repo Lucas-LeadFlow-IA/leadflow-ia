@@ -112,6 +112,10 @@ class TradingSystem:
         self._orders_logged = 0
         self._stop = asyncio.Event()
         self._lock = asyncio.Lock()
+        # computer-sleep detection: wall clock advances during sleep, time.monotonic() does not
+        self._last_tick_wall_ms: int | None = None
+        self._last_tick_mono: float | None = None
+        self.resync_until_ms = 0
 
     # ------------------------------------------------------------------ lifecycle
     async def start(self) -> None:
@@ -209,8 +213,31 @@ class TradingSystem:
         self.health.spread_bps = book.spread_bps if book else None
 
     # ------------------------------------------------------------------ main tick
+    SLEEP_DETECT_S = 30.0      # wall-clock time missing from the monotonic clock => process was suspended
+    RESYNC_GRACE_S = 180.0     # after a sleep: entries blocked (no halt) while data/connections resync
+
+    async def _check_resume(self, now: int) -> None:
+        """Detect a computer sleep (laptop lid closed...) and resync market data instead of
+        letting the stale-data breaker halt the system. New entries stay blocked until the
+        data is fresh again; if it is still stale after the grace period, the normal halt applies."""
+        mono = time.monotonic()
+        if self._last_tick_wall_ms is not None and self._last_tick_mono is not None:
+            slept_s = (now - self._last_tick_wall_ms) / 1000 - (mono - self._last_tick_mono)
+            if slept_s > self.SLEEP_DETECT_S:
+                self.resync_until_ms = now + int(self.RESYNC_GRACE_S * 1000)
+                self._event("warning", "orchestrator", "resumed_after_sleep",
+                            f"computer slept ~{slept_s:.0f}s: resyncing market data, new entries blocked until fresh")
+        self._last_tick_wall_ms, self._last_tick_mono = now, mono
+        resyncing = now < self.resync_until_ms
+        if resyncing and self.store.staleness_s("candle_1m", now) > self.s.max_data_staleness_seconds / 3:
+            refill = getattr(self.market, "refill", None)
+            if refill is not None:
+                await refill()
+        self.health.resyncing_after_sleep = resyncing
+
     async def tick(self) -> None:
         now = now_ms()
+        await self._check_resume(now)
         await self.exchange.on_market_update()
         acct = await self._sync_account()
         self._update_health(now)

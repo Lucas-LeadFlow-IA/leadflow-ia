@@ -71,7 +71,7 @@ btc-ai-trading/
 ├── skills/            15 SKILL.md (copiés dans .claude/skills pour Claude Code)
 ├── strategies/        scalping, intraday, trend following, range trading, registre
 ├── telegram/          bot (liste blanche, arrêt d'urgence en 2 étapes)
-├── scripts/           téléchargement, backtests, ML, walk-forward, sync des skills
+├── scripts/           téléchargement, backtests, ML, walk-forward, sync des skills, service macOS
 ├── tests/             89 tests (pytest)
 ├── docs/              ARCHITECTURE, SECURITY, GO_LIVE
 ├── main.py  requirements.txt  pyproject.toml  Dockerfile  docker-compose.yml  .env.example
@@ -126,6 +126,39 @@ Telegram (optionnel) : créer un bot via @BotFather, renseigner `TELEGRAM_BOT_TO
 `TELEGRAM_ALLOWED_USER_IDS` (votre identifiant numérique). Commandes : `/status /balance /positions
 /performance /strategies /risk /pause /resume /emergency_stop` (+ `/emergency_stop CONFIRM` sous 60 s).
 Aucune commande ne peut modifier les limites de risque.
+
+### Fonctionnement automatique sur Mac (démarrage à l'ouverture de session)
+
+```bash
+cd btc-ai-trading
+./scripts/macos_service.sh install     # installe ce qui manque, démarre, ouvre le dashboard
+```
+
+`install` crée le `.env` (PAPER) s'il n'existe pas, l'environnement Python et le dashboard si besoin
+(Python ≥ 3.11 et Node.js requis : `brew install python@3.13 node`), vérifie la configuration, puis
+enregistre un agent `launchd` utilisateur (`~/Library/LaunchAgents/com.btc-ai-trading.bot.plist`) :
+
+* démarrage immédiat et à chaque ouverture de session ; redémarrage automatique après un plantage
+  (pas après un arrêt volontaire) ;
+* le Mac reste éveillé tant que le bot tourne (`caffeinate -i`). Capot fermé sur batterie, le Mac dort
+  quand même : le bot est suspendu. Au réveil, il détecte la veille, recharge les données et bloque les
+  nouvelles entrées tant qu'elles ne sont pas fraîches ; si elles restent périmées plus de 3 min, le kill
+  switch passe en `HALTED` comme d'habitude. Pendant la veille, rien n'est surveillé : en TESTNET seule la
+  protection côté exchange (stop-loss) reste active, et en PAPER un stop touché pendant la veille n'est pas
+  simulé. Pour des résultats fiables, laissez le Mac branché et ouvert ;
+* journaux : `logs/service.log` ; jeton du dashboard affiché par `status`.
+
+| Commande | Effet |
+|---|---|
+| `./scripts/macos_service.sh status` | état launchd, santé de l'API, jeton du dashboard |
+| `./scripts/macos_service.sh logs` | suivre les journaux |
+| `./scripts/macos_service.sh stop` / `start` | arrêter (jusqu'au prochain `start` ou à la prochaine session) / relancer |
+| `./scripts/macos_service.sh uninstall` | arrêter et supprimer le démarrage automatique |
+
+Seuls **PAPER** et **TESTNET** peuvent être automatisés. Le script refuse `TRADING_MODE=live` : le LIVE
+exige une confirmation humaine au terminal (code aléatoire), par conception. Un redémarrage ne
+réarme jamais un kill switch en `HALTED` (état conservé dans `runtime/`). Avec Docker, `docker compose up -d`
+offre le même fonctionnement continu (`restart: unless-stopped`).
 
 ## 5. Données et limites techniques
 
@@ -206,6 +239,10 @@ contrôles, LIVE refusé), Telegram (liste blanche, confirmation), base de donn�
   La première étape testnet est donc obligatoire (docs/GO_LIVE.md).
 - **Telegram** : testé avec un transport simulé (l'API Telegram n'était pas joignable ici).
 - **Paper** : le modèle de remplissage des ordres passifs (traversée du prix) est une approximation.
+- **Service macOS** (`scripts/macos_service.sh`) : écrit et vérifié sous Linux (syntaxe, fichier launchd
+  valide, installation automatique dans une copie propre, refus du LIVE, arrêt propre sur SIGTERM avec
+  code 0, code non nul après un plantage, reprise après veille simulée), mais `launchctl` et `caffeinate`
+  n'ont pas pu être exécutés sur un vrai Mac depuis cet environnement.
 
 ## 11. Roadmap
 

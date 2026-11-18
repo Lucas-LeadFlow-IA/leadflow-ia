@@ -62,6 +62,17 @@ class FakeMarket:
     async def stop(self):
         return None
 
+    refill_works = True
+    refills = 0
+
+    async def refill(self):
+        self.refills += 1
+        if self.refill_works:
+            import time
+            now = int(time.time() * 1000)
+            for k in list(self.store.last_update):
+                self.store.last_update[k] = now
+
     def health(self):
         return {"ws_connected": True, "ws_reconnects": 0, "ws_disconnects_10min": 0, "ws_last_message_age_s": 0.1,
                 "rest_consecutive_failures": 0, "staleness_s": {}, "book_age_s": 0.0, "ctx_age_s": 0.0, "candle_1m_lag_s": 0.0}
@@ -99,6 +110,36 @@ def test_stale_data_halts_and_blocks(system):
     asyncio.run(system.tick())
     assert system.kill_switch.state.value == "halted"
     assert not system.kill_switch.entries_allowed
+
+
+def _simulate_sleep(system, minutes=10):
+    """Pretend the computer slept: wall clock jumped, monotonic clock did not, data is old."""
+    system._last_tick_wall_ms -= minutes * 60_000
+    for k in list(system.store.last_update):
+        system.store.last_update[k] -= minutes * 60_000
+
+
+def test_resume_after_sleep_resyncs_without_halting(system):
+    asyncio.run(system.tick())
+    _simulate_sleep(system)
+    asyncio.run(system.tick())
+    assert system.market.refills == 1
+    assert system.kill_switch.state.value == "running"
+    assert any(e["kind"] == "resumed_after_sleep" for e in system.db.events("paper", 20))
+
+
+def test_resume_after_sleep_blocks_entries_then_halts_if_data_stays_stale(system):
+    asyncio.run(system.tick())
+    system.market.refill_works = False                  # network not back yet
+    _simulate_sleep(system)
+    asyncio.run(system.tick())
+    assert system.kill_switch.state.value == "running"  # no halt during the grace period...
+    assert system.health.resyncing_after_sleep
+    reasons = [r for a, r in system.risk.circuit_breakers(None, system.health) if a == "block"]
+    assert any("computer sleep" in r for r in reasons)  # ...but new entries are blocked
+    system.resync_until_ms = 0                          # grace period over, data still stale
+    asyncio.run(system.tick())
+    assert system.kill_switch.state.value == "halted"
 
 
 def test_api_auth_and_controls(system):

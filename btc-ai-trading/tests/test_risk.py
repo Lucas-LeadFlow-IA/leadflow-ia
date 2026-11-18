@@ -161,3 +161,18 @@ def test_circuit_breakers_for_infrastructure(tmp_path):
     reasons = " ".join(r for _, r in b)
     for word in ("too old", "unstable", "desynchronisation", "execution errors"):
         assert word in reasons
+
+
+def test_connectivity_breakers_only_block_while_resyncing_after_sleep(tmp_path):
+    rm = manager(tmp_path)
+    h = SystemHealth(data_age_s=600, max_data_age_s=90, ws_disconnects_10min=6, rest_failures=7,
+                     desync=True, desync_detail="x", resyncing_after_sleep=True)
+    b = rm.circuit_breakers(None, h)
+    halts = [r for a, r in b if a == "halt"]
+    blocks = [r for a, r in b if a == "block"]
+    # stale data / unstable connection: entries blocked, no halt, while resyncing
+    assert any("too old" in r and "computer sleep" in r for r in blocks)
+    assert any("unstable" in r for r in blocks)
+    assert not any("too old" in r or "unstable" in r for r in halts)
+    # a real account desync still halts, sleep or not
+    assert any("desynchronisation" in r for r in halts)

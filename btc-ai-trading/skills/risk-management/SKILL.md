@@ -32,6 +32,10 @@ Budget = min(risque/trade, reste du budget journalier) ; ×0,5 en haute volatili
 ## Règles de décision
 - Coupe-circuits → **HALT** : drawdown max, données > 90 s, ≥ 5 coupures WS/10 min, ≥ 6 échecs REST,
   désynchronisation du compte, ≥ 3 erreurs d'exécution/10 min. **BLOCK** : perte jour (jusqu'à 00:00 UTC), données > 30 s.
+- Réveil après une veille de l'ordinateur (horloge murale en avance sur l'horloge monotone > 30 s) :
+  rechargement des données et, pendant 3 min, données périmées / coupures WS / échecs REST → **BLOCK**
+  au lieu de HALT. Après ce délai, la règle normale (HALT) s'applique. Drawdown, désynchronisation et
+  erreurs d'exécution déclenchent toujours HALT.
 - Kill switch : RUNNING / PAUSED (reprise possible) / HALTED (reset CLI uniquement, saisie `RESET`).
 - Aucune martingale, aucun renforcement, aucune moyenne à la baisse (une position, jamais d'ajout).
 

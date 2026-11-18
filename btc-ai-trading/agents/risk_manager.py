@@ -39,6 +39,10 @@ class SystemHealth:
     desync_detail: str = ""
     execution_errors_10min: int = 0
     spread_bps: float | None = None
+    # True for a short grace period after the computer slept (process suspended): data and
+    # connections are expected to be stale while they resync, so connectivity breakers
+    # block entries instead of halting. Drawdown, desync and execution errors still halt.
+    resyncing_after_sleep: bool = False
     notes: list[str] = field(default_factory=list)
 
 
@@ -83,16 +87,18 @@ class RiskManager(BaseAgent):
                     self.risk_state.daily_lock_day = self.risk_state.day
                     self.risk_state.save()
                 out.append(("block", f"daily loss limit reached: {dl:.2f}% >= {self.limits.max_daily_loss_pct}% (locked until 00:00 UTC)"))
+        link = "block" if health.resyncing_after_sleep else "halt"
+        sleep_note = " (resyncing after computer sleep)" if health.resyncing_after_sleep else ""
         if health.data_age_s > health.max_data_age_s:
-            out.append(("halt", f"market data too old: {health.data_age_s:.0f}s > {health.max_data_age_s:.0f}s"))
+            out.append((link, f"market data too old: {health.data_age_s:.0f}s > {health.max_data_age_s:.0f}s{sleep_note}"))
         elif health.data_age_s > health.max_data_age_s / 3:
-            out.append(("block", f"market data stale ({health.data_age_s:.0f}s)"))
+            out.append(("block", f"market data stale ({health.data_age_s:.0f}s){sleep_note}"))
         if not health.ws_connected:
             out.append(("block", "websocket disconnected"))
         if health.ws_disconnects_10min >= 5:
-            out.append(("halt", f"unstable API connection: {health.ws_disconnects_10min} websocket drops in 10 min"))
+            out.append((link, f"unstable API connection: {health.ws_disconnects_10min} websocket drops in 10 min{sleep_note}"))
         if health.rest_failures >= 6:
-            out.append(("halt", f"unstable API connection: {health.rest_failures} consecutive REST failures"))
+            out.append((link, f"unstable API connection: {health.rest_failures} consecutive REST failures{sleep_note}"))
         if health.desync:
             out.append(("halt", f"account desynchronisation: {health.desync_detail}"))
         if health.account_sync_age_s > 120:

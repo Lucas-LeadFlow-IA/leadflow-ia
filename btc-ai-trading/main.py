@@ -44,7 +44,9 @@ def build_exchange(settings: Settings, mode: TradingMode, store):
                                settings.hl_api_wallet_private_key.get_secret_value())
 
 
-async def run_system(settings: Settings, mode: TradingMode) -> None:
+async def run_system(settings: Settings, mode: TradingMode) -> bool:
+    """Run until SIGINT/SIGTERM or until a task crashes. Returns True if a task crashed
+    (so a supervisor such as launchd or Docker can restart the process)."""
     import uvicorn
 
     from agents.orchestrator import TradingSystem
@@ -74,7 +76,8 @@ async def run_system(settings: Settings, mode: TradingMode) -> None:
     if token_file:
         log.warning("DASHBOARD_TOKEN not set: a random token was written to %s", token_file)
     app = create_app(system, settings, token)
-    server = uvicorn.Server(uvicorn.Config(app, host=settings.api_host, port=settings.api_port, log_level="warning"))
+    server = uvicorn.Server(uvicorn.Config(app, host=settings.api_host, port=settings.api_port, log_level="warning",
+                                               lifespan="off"))
     tasks = [asyncio.create_task(system.run(), name="trading"), asyncio.create_task(server.serve(), name="api")]
     if bot is not None:
         tasks.append(asyncio.create_task(bot.run(), name="telegram"))
@@ -87,12 +90,20 @@ async def run_system(settings: Settings, mode: TradingMode) -> None:
             loop.add_signal_handler(sig, stop.set)
         except (NotImplementedError, RuntimeError):  # Windows
             pass
+    crashed = False
     try:
         stop_task = asyncio.create_task(stop.wait(), name="stop")
         done, _ = await asyncio.wait([stop_task, *tasks], return_when=asyncio.FIRST_COMPLETED)
         for t in done:
-            if t is not stop_task and not t.cancelled() and t.exception() is not None:
+            if t is stop_task or t.cancelled():
+                continue
+            if t.exception() is not None:
+                crashed = True
                 log.error("task %s crashed: %s", t.get_name(), t.exception())
+            elif not (stop.is_set() or server.should_exit):
+                # uvicorn traps SIGINT/SIGTERM itself and sets should_exit: that is a requested stop.
+                crashed = True
+                log.error("task %s stopped unexpectedly", t.get_name())
     except KeyboardInterrupt:
         pass
     finally:
@@ -104,6 +115,7 @@ async def run_system(settings: Settings, mode: TradingMode) -> None:
         for t in tasks:
             t.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+    return crashed
 
 
 async def check_connection(settings: Settings) -> int:
@@ -157,8 +169,7 @@ def main() -> int:
         except ModeGuardError as exc:
             print(f"REFUSED: {exc}")
             return 2
-        asyncio.run(run_system(settings, mode))
-        return 0
+        return 1 if asyncio.run(run_system(settings, mode)) else 0
     if args.cmd == "check-connection":
         return asyncio.run(check_connection(settings))
     if args.cmd == "download-data":
