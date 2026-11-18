@@ -1,0 +1,6 @@
+{
+  "_comment": "Scheduled high-impact events (UTC). The regime detector forces NEWS_DRIVEN (no new entries) from before_min before to after_min after each event. Add CPI / FOMC / NFP dates yourself; nothing is fetched automatically.",
+  "events": [
+    {"name": "EXAMPLE - FOMC rate decision", "time_utc": "2020-01-29T19:00:00Z", "before_min": 30, "after_min": 90}
+  ]
+}

@@ -1,0 +1,48 @@
+# --- Secrets: never commit ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets/
+
+# --- Python ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+.coverage
+htmlcov/
+
+# --- Runtime data (market data, DB, state, reports) ---
+data/*
+!data/.gitkeep
+runtime/*
+!runtime/.gitkeep
+models/*
+!models/.gitkeep
+!models/README.md
+reports/
+logs/
+*.log
+*.db
+*.sqlite
+
+# --- Dashboard (Next.js) ---
+dashboard/web/node_modules/
+dashboard/web/.next/
+dashboard/web/out/
+dashboard/web/next-env.d.ts
+*.tsbuildinfo
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
