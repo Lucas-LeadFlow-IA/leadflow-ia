@@ -52,19 +52,19 @@ class RiskManager(BaseAgent):
         self.limits = limits
         self.costs = costs
         self.kill_switch = kill_switch
-        self.state = state
+        self.risk_state = state
         self.sz_decimals = sz_decimals
         self.high_vol_risk_multiplier = high_vol_risk_multiplier
 
     # ------------------------------------------------------------------ equity tracking
     def update_equity(self, equity: float, ts: int | None = None) -> None:
-        self.state.update_equity(equity, ts or now_ms())
-        self.state.save()
+        self.risk_state.update_equity(equity, ts or now_ms())
+        self.risk_state.save()
 
     def on_trade_closed(self, net_pnl: float, ts: int | None = None) -> None:
-        self.state.on_trade_closed(net_pnl, ts or now_ms(), self.limits.max_consecutive_losses,
+        self.risk_state.on_trade_closed(net_pnl, ts or now_ms(), self.limits.max_consecutive_losses,
                                    self.limits.cooldown_minutes_after_losses)
-        self.state.save()
+        self.risk_state.save()
 
     # ------------------------------------------------------------------ circuit breakers
     def circuit_breakers(self, account: AccountState | None, health: SystemHealth, ts: int | None = None) -> list[tuple[str, str]]:
@@ -74,14 +74,14 @@ class RiskManager(BaseAgent):
         out: list[tuple[str, str]] = []
         if account is not None:
             eq = account.equity
-            dd = self.state.drawdown_pct(eq)
+            dd = self.risk_state.drawdown_pct(eq)
             if dd >= self.limits.max_drawdown_pct:
                 out.append(("halt", f"max drawdown reached: {dd:.2f}% >= {self.limits.max_drawdown_pct}% of peak"))
-            dl = self.state.daily_loss_pct(eq)
+            dl = self.risk_state.daily_loss_pct(eq)
             if dl >= self.limits.max_daily_loss_pct:
-                if self.state.daily_lock_day != self.state.day:
-                    self.state.daily_lock_day = self.state.day
-                    self.state.save()
+                if self.risk_state.daily_lock_day != self.risk_state.day:
+                    self.risk_state.daily_lock_day = self.risk_state.day
+                    self.risk_state.save()
                 out.append(("block", f"daily loss limit reached: {dl:.2f}% >= {self.limits.max_daily_loss_pct}% (locked until 00:00 UTC)"))
         if health.data_age_s > health.max_data_age_s:
             out.append(("halt", f"market data too old: {health.data_age_s:.0f}s > {health.max_data_age_s:.0f}s"))
@@ -107,7 +107,7 @@ class RiskManager(BaseAgent):
         ts = ts or now_ms()
         L, checks, reasons = self.limits, {}, []
         equity = account.equity  # includes unrealized P&L
-        self.state.update_equity(equity, ts)
+        self.risk_state.update_equity(equity, ts)
 
         def check(name: str, ok: bool, why: str) -> None:
             checks[name] = bool(ok)
@@ -117,9 +117,9 @@ class RiskManager(BaseAgent):
         check("kill_switch", self.kill_switch.entries_allowed, f"kill switch is {self.kill_switch.state.value}: {self.kill_switch.reason}")
         breakers = self.circuit_breakers(account, health, ts)
         check("circuit_breakers", not breakers, "; ".join(r for _, r in breakers))
-        check("daily_lock", self.state.daily_lock_day != self.state.day, "daily loss limit already hit today")
-        check("cooldown", ts >= self.state.cooldown_until_ms,
-              f"cool-down after {L.max_consecutive_losses} consecutive losses until {self.state.cooldown_until_ms}")
+        check("daily_lock", self.risk_state.daily_lock_day != self.risk_state.day, "daily loss limit already hit today")
+        check("cooldown", ts >= self.risk_state.cooldown_until_ms,
+              f"cool-down after {L.max_consecutive_losses} consecutive losses until {self.risk_state.cooldown_until_ms}")
         check("single_position", account.position(setup_coin(setup)) is None,
               "a position is already open (one position max, no pyramiding / averaging)")
         check("no_open_orders", not account.open_orders, f"{len(account.open_orders)} open order(s) on the exchange")
@@ -145,7 +145,7 @@ class RiskManager(BaseAgent):
         # risk budget: per-trade, reduced in high volatility, capped by remaining daily budget
         risk_pct = L.risk_per_trade_pct * (self.high_vol_risk_multiplier if regime == Regime.HIGH_VOL else 1.0)
         budget = equity * risk_pct / 100
-        daily_left = self.state.day_start_equity * L.max_daily_loss_pct / 100 - max(0.0, -self.state.daily_pnl(equity))
+        daily_left = self.risk_state.day_start_equity * L.max_daily_loss_pct / 100 - max(0.0, -self.risk_state.daily_pnl(equity))
         budget = min(budget, max(0.0, daily_left))
         sizing = compute_size(equity, setup.entry_price, setup.stop_loss, budget, self.costs, setup.entry_type,
                               L.max_leverage, self.sz_decimals, L.leverage_safety_buffer)
@@ -170,7 +170,7 @@ class RiskManager(BaseAgent):
             risk_usd=sizing.risk_usd if sizing.ok else 0.0, est_cost_usd=sizing.est_cost_usd if sizing.ok else 0.0,
             leverage=sizing.leverage if sizing.ok else 0.0, checks=checks,
         )
-        self.state.save()
+        self.risk_state.save()
         summary = ("APPROVED " if approved else "VETO ") + (
             f"{setup.strategy.value} {setup.direction.value} size {sizing.size} BTC risk ${sizing.risk_usd:.2f}"
             if approved else "; ".join(reasons[:2]))
@@ -179,8 +179,8 @@ class RiskManager(BaseAgent):
                     "ok" if approved else "warning")
         return verdict
 
-    def status(self, account: AccountState | None) -> dict:
-        eq = account.equity if account else self.state.last_equity
+    def risk_status(self, account: AccountState | None) -> dict:
+        eq = account.equity if account else self.risk_state.last_equity
         L = self.limits
         return {
             "kill_switch": self.kill_switch.to_dict(),
@@ -191,17 +191,17 @@ class RiskManager(BaseAgent):
                 "max_consecutive_losses": L.max_consecutive_losses, "min_reward_risk": L.min_reward_risk,
             },
             "equity": eq,
-            "peak_equity": self.state.peak_equity,
-            "day_start_equity": self.state.day_start_equity,
-            "daily_pnl": self.state.daily_pnl(eq),
-            "daily_loss_pct": self.state.daily_loss_pct(eq),
-            "daily_loss_limit_usd": self.state.day_start_equity * L.max_daily_loss_pct / 100,
-            "drawdown_pct": self.state.drawdown_pct(eq),
+            "peak_equity": self.risk_state.peak_equity,
+            "day_start_equity": self.risk_state.day_start_equity,
+            "daily_pnl": self.risk_state.daily_pnl(eq),
+            "daily_loss_pct": self.risk_state.daily_loss_pct(eq),
+            "daily_loss_limit_usd": self.risk_state.day_start_equity * L.max_daily_loss_pct / 100,
+            "drawdown_pct": self.risk_state.drawdown_pct(eq),
             "risk_per_trade_usd": eq * L.risk_per_trade_pct / 100,
-            "consecutive_losses": self.state.consecutive_losses,
-            "cooldown_until_ms": self.state.cooldown_until_ms,
-            "daily_locked": self.state.daily_lock_day == self.state.day,
-            "trades_today": self.state.trades_today,
+            "consecutive_losses": self.risk_state.consecutive_losses,
+            "cooldown_until_ms": self.risk_state.cooldown_until_ms,
+            "daily_locked": self.risk_state.daily_lock_day == self.risk_state.day,
+            "trades_today": self.risk_state.trades_today,
         }
 
 

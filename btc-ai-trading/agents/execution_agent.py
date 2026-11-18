@@ -57,6 +57,7 @@ class ExecutionAgent(BaseAgent):
         self.position: ManagedPosition | None = None
         self.error_times: deque[int] = deque(maxlen=50)
         self.order_log: deque[dict] = deque(maxlen=200)
+        self.order_seq = 0
 
     # ------------------------------------------------------------------ helpers
     def errors_last_10min(self) -> int:
@@ -70,8 +71,9 @@ class ExecutionAgent(BaseAgent):
         self.log.error(msg)
 
     def _log_order(self, kind: str, req: OrderRequest | None, ack=None, note: str = "") -> None:
+        self.order_seq += 1
         self.order_log.append({
-            "ts": self._clock(), "kind": kind, "side": None if req is None else ("buy" if req.is_buy else "sell"),
+            "seq": self.order_seq, "ts": self._clock(), "kind": kind, "side": None if req is None else ("buy" if req.is_buy else "sell"),
             "size": None if req is None else req.size, "px": None if req is None else req.limit_price,
             "trigger": None if req is None else req.trigger_price, "reduce_only": None if req is None else req.reduce_only,
             "cloid": None if req is None else req.cloid, "state": None if ack is None else ack.state.value,
