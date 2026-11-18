@@ -83,7 +83,7 @@ export default function Trades() {
                     <td className="num">{usd(t.funding, 3)}</td>
                     <td className={`num font-medium ${tone(t.net_pnl)}`}>{signedUsd(t.net_pnl)}</td>
                     <td className="num">{num(t.r_multiple, 2)}</td>
-                    <td className="max-w-xs text-xs text-muted">{t.exit_reason}</td>
+                    <td className="min-w-[200px] max-w-xs text-xs text-muted"><span className="line-clamp-2">{t.exit_reason}</span></td>
                   </tr>
                 ))}
               </tbody>
@@ -106,7 +106,7 @@ export default function Trades() {
                     <td>{o.kind}</td><td>{o.side}</td><td className="num">{o.size}</td><td className="num">{usd(o.price, 0)}</td>
                     <td className="num">{o.trigger ? usd(o.trigger, 0) : "–"}</td>
                     <td><Pill kind={o.error ? "bad" : "neutral"}>{o.state ?? "–"}</Pill></td>
-                    <td className="max-w-xs text-xs text-bad">{o.error}</td>
+                    <td className="min-w-[200px] max-w-xs text-xs text-bad"><span className="line-clamp-2">{o.error}</span></td>
                   </tr>
                 ))}
               </tbody>

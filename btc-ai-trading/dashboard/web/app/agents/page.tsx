@@ -58,7 +58,7 @@ export default function Agents() {
       <Card title="Historique des décisions">
         {data?.decisions?.length ? (
           <div className="overflow-x-auto">
-            <table className="tbl">
+            <table className="tbl min-w-[900px]">
               <thead><tr><th>Heure</th><th>Décision</th><th>Stratégie</th><th>Régime</th><th>Score</th><th>Risque</th><th>Raisons</th></tr></thead>
               <tbody>
                 {data.decisions.map((d: any, i: number) => (
@@ -69,7 +69,7 @@ export default function Agents() {
                     <td className="text-muted">{regimeLabel[d.regime] ?? d.regime}</td>
                     <td className="num">{d.score === null ? "–" : Math.round(d.score)}</td>
                     <td>{d.score === null ? "–" : <Pill kind={d.approved ? "good" : "warn"}>{d.approved ? "approuvé" : "veto"}</Pill>}</td>
-                    <td className="max-w-md text-xs text-muted">{(d.reasons ?? []).slice(0, 2).join(" · ")}</td>
+                    <td className="min-w-[280px] max-w-md text-xs text-muted"><span className="line-clamp-2">{(d.reasons ?? []).slice(0, 2).join(" · ")}</span></td>
                   </tr>
                 ))}
               </tbody>

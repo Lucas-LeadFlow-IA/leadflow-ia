@@ -30,7 +30,7 @@ body { font-feature-settings: "cv11", "ss01"; -webkit-font-smoothing: antialiase
   .btn-ghost { @apply btn border border-line bg-raised text-ink hover:border-faint; }
   .btn-danger { @apply btn bg-bad/90 text-white hover:bg-bad; }
   .btn-primary { @apply btn bg-accent text-black hover:brightness-110; }
-  .tbl { @apply w-full text-sm; }
+  .tbl { @apply w-full min-w-[640px] text-sm; }
   .tbl th { @apply px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wider text-muted; }
   .tbl td { @apply border-t border-line px-3 py-2 align-top; }
 }
